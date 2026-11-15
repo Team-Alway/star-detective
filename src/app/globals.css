@@ -128,3 +128,73 @@
     @apply font-sans;
   }
 }
+
+.landing-page {
+  min-height: 100vh;
+  overflow: hidden;
+  background: #091227;
+  color: #fbfbff;
+}
+
+.navigation {
+  display: flex;
+  height: 64px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  background: #151d32;
+  border-bottom: 1px solid #354159;
+}
+
+.brand, .button { text-decoration: none; }
+.brand { color: #fbfbff; font-family: var(--font-display), sans-serif; font-size: 22px; font-weight: 500; }
+.nav-links { display: flex; gap: 16px; }
+.button { display: inline-flex; height: 48px; align-items: center; justify-content: center; border: 0; border-radius: 8px; padding: 0 16px; color: #fbfbff; cursor: pointer; font: 400 16px/1.45 var(--font-sans), sans-serif; transition: background-color 160ms ease, filter 160ms ease; }
+.button:hover { filter: brightness(1.12); }
+.button-primary { width: 328px; background: #e8d7ff; color: #091227; }
+.button-secondary { width: 184px; background: #2d3047; border: 1px solid #354159; }
+.button-ghost { width: 136px; background: #091227; }
+.nav-links .button:last-child { width: 200px; }
+
+.landing-content { display: grid; grid-template-columns: minmax(420px, 544px) minmax(500px, 672px); gap: 96px; max-width: 1312px; margin: 0 auto; padding: 48px 0 40px; }
+.intro-column { padding-top: 56px; }
+.eyebrow { margin: 0 0 30px; color: #e8d7ff; font: 500 14px/1.45 var(--font-data), monospace; }
+h1 { margin: 0; color: #fbfbff; font: 700 72px/1.03 var(--font-display), sans-serif; letter-spacing: 0; }
+.intro-copy { max-width: 544px; margin: 34px 0 56px; color: #b3bcd0; font: 500 22px/1.45 var(--font-display), sans-serif; }
+.intro-actions { display: flex; flex-direction: column; gap: 16px; }
+.intro-actions .button-ghost { width: 328px; }
+.microcopy { margin: 16px 0 34px; color: #b3bcd0; font: 400 13px/1.45 var(--font-sans), sans-serif; }
+.mission-note { box-sizing: border-box; height: 88px; padding: 14px 16px; border-radius: 12px; background: #151d32; font-family: var(--font-sans), sans-serif; }
+.mission-note p { margin: 0 0 7px; color: #fbfbff; font-size: 16px; }
+.mission-note span { color: #b3bcd0; font-size: 13px; }
+.reference-column { min-width: 0; }
+.sky-image { position: relative; aspect-ratio: 1; overflow: hidden; background: #091227; }
+.sky-image > img { object-fit: cover; transform: scale(3.5026) translate(-21.86%, -2.95%); }
+.date-label, .scale-label { position: absolute; left: 12px; border-radius: 6px; background: #091227; color: #fbfbff; }
+.date-label { top: 12px; width: 252px; height: 36px; box-sizing: border-box; padding: 8px 12px; font: 500 14px/1.45 var(--font-data), monospace; }
+.scale-label { bottom: 12px; width: 196px; height: 40px; box-sizing: border-box; padding: 10px 12px; color: #b3bcd0; font: 400 13px/1.45 var(--font-sans), sans-serif; }
+.comparison-bar { display: flex; height: 64px; align-items: center; gap: 24px; margin-top: 10px; padding: 0 12px; border-radius: 8px; background: #151d32; color: #b3bcd0; font: 400 16px/1.45 var(--font-sans), sans-serif; }
+.blink-control { display: inline-flex; width: 224px; height: 48px; flex: 0 0 auto; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 8px; background: #2d3047; color: #fbfbff; cursor: pointer; font: inherit; }
+.blink-control small { color: #b3bcd0; font-size: 13px; }
+.image-caption { margin: 10px 0 0; color: #b3bcd0; font: 400 13px/1.45 var(--font-sans), sans-serif; }
+
+@media (max-width: 1100px) {
+  .landing-content { grid-template-columns: minmax(340px, 1fr) minmax(420px, 1fr); gap: 48px; padding-right: 32px; padding-left: 32px; }
+  .nav-links { gap: 8px; }
+}
+
+@media (max-width: 760px) {
+  .navigation { height: auto; min-height: 64px; padding: 12px 20px; align-items: flex-start; }
+  .brand { font-size: 19px; }
+  .nav-links { display: none; }
+  .landing-content { display: flex; flex-direction: column; gap: 40px; padding: 40px 20px 32px; }
+  .intro-column { padding-top: 0; }
+  .eyebrow { margin-bottom: 24px; font-size: 12px; }
+  h1 { font-size: clamp(52px, 16vw, 72px); }
+  .intro-copy { margin: 26px 0 36px; font-size: 19px; }
+  .button-primary, .intro-actions .button-ghost { width: 100%; }
+  .mission-note { height: auto; min-height: 88px; }
+  .comparison-bar { height: auto; min-height: 64px; flex-wrap: wrap; gap: 8px 16px; padding: 8px 12px; }
+  .blink-control { width: 190px; }
+  .image-caption { font-size: 11px; }
+}
