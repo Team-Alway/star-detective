@@ -1,8 +1,11 @@
-const storageKey = "star-detective";
+import type { RoundEntry } from "@/lib/demo";
+
+export const storageKey = "star-detective";
 
 export type PlayerProgress = {
   xp: number;
   results: Record<string, boolean>;
+  round?: RoundEntry[];
 };
 
 const emptyProgress: PlayerProgress = {
@@ -25,4 +28,12 @@ export function saveProgress(progress: PlayerProgress): void {
   } catch {
     return;
   }
+}
+
+export function saveRound(round: RoundEntry[]): void {
+  saveProgress({
+    xp: round.reduce((total, entry) => total + entry.delta, 0),
+    results: Object.fromEntries(round.map((entry) => [entry.patchId, entry.correct])),
+    round,
+  });
 }
