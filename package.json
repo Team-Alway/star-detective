@@ -1,0 +1,11 @@
+{
+  "devDependencies": {
+    "concurrently": "^10.0.7",
+    "shadcn": "^4.23.0"
+  },
+  "scripts": {
+    "dev": "concurrently -n api,web -c cyan,magenta \"npm:dev:backend\" \"npm:dev:frontend\"",
+    "dev:backend": "cd backend && .venv/bin/python -m uvicorn main:app --reload --port 8000",
+    "dev:frontend": "npm run dev --prefix frontend"
+  }
+}

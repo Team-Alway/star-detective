@@ -1,0 +1,4 @@
+# Raw IRSA cutouts are large (~65 MB) and re-downloadable: keep them out of git.
+# The small co-added frames, query results and stretches ARE committed (~5 MB) so the
+# five preset targets render instantly on a fresh server (e.g. Render free tier).
+cutouts/

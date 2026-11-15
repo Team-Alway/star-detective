@@ -56,10 +56,19 @@ app = FastAPI(
     },
 )
 
-# Enable unrestricted CORS so local React/Vite/Next.js dev servers and deployed frontends connect cleanly
+import os
+_ORIGINS = ["http://localhost:3000", "http://127.0.0.1:3000"] + [
+    o.strip() for o in os.environ.get("CORS_ORIGINS", "").split(",") if o.strip()
+]
+from auth import router as auth_router
+app.include_router(auth_router)
+from sky import router as sky_router
+app.include_router(sky_router)
+
+# CORS (explicit origins, credentials for session cookie) so local React/Vite/Next.js dev servers and deployed frontends connect cleanly
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

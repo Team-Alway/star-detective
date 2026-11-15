@@ -1,7 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
+import "@/app/inner-game.css";
 
 export type Side = "A" | "B";
 export type BlinkSpeed = "slow" | "fast";
@@ -59,62 +59,36 @@ export default function BlinkControls({ blink }: { blink: BlinkState }) {
   }, [toggle, step]);
 
   return (
-    <div className="blink-row">
-      <button
-        type="button"
-        className="blink-control blink-toggle"
-        aria-pressed={blinking}
-        onClick={toggle}
-      >
-        {!blinking && <Image src="/figma/asset-2.svg" alt="" width={20} height={20} />}
-        <span>
-          <span className="blink-word-long">{blinking ? "Stop blink" : "Start blink"}</span>
-          <span className="blink-word-short">{blinking ? "Stop" : "Blink"}</span>
-        </span>
-        <small className="blink-speed-hint">{speed === "slow" ? "Slow" : "Fast"}</small>
+    <div className="ig-controls" role="group" aria-label="Compare images A and B">
+      <button type="button" className="ig-ctl ig-ctl-main" aria-pressed={blinking} onClick={toggle}>
+        <span aria-hidden>{blinking ? "■" : "▶"}</span>
+        <span>{blinking ? "Stop" : "Blink"}</span>
+        <small className="ig-ctl-long">{speed === "slow" ? "1/s" : "2/s"}</small>
       </button>
 
-      <div className="speed-group" role="group" aria-label="Blink speed">
-        <button
-          type="button"
-          className={`btn ${speed === "slow" ? "btn-active" : "btn-ghost"} btn-w72`}
-          aria-pressed={speed === "slow"}
-          onClick={() => setSpeed("slow")}
-        >
+      <span className="ig-ctl-sep" aria-hidden />
+      <div className="ig-speed-group" role="group" aria-label="Blink speed">
+        <button type="button" className="ig-ctl" aria-pressed={speed === "slow"} onClick={() => setSpeed("slow")}>
           Slow
         </button>
-        <button
-          type="button"
-          className={`btn ${speed === "fast" ? "btn-active" : "btn-ghost"} btn-w72`}
-          aria-pressed={speed === "fast"}
-          onClick={() => setSpeed("fast")}
-        >
+        <button type="button" className="ig-ctl" aria-pressed={speed === "fast"} onClick={() => setSpeed("fast")}>
           Fast
         </button>
       </div>
       <button
         type="button"
-        className="btn btn-secondary speed-cycle"
+        className="ig-ctl ig-speed-cycle"
         onClick={() => setSpeed(speed === "slow" ? "fast" : "slow")}
         aria-label={`Blink speed: ${speed}. Press to change.`}
       >
-        {speed === "slow" ? "Slow" : "Fast"} <small aria-hidden>⌄</small>
+        {speed === "slow" ? "Slow" : "Fast"}
       </button>
 
-      <button
-        type="button"
-        className="btn btn-secondary step-button"
-        aria-pressed={!blinking && side === "A"}
-        onClick={() => step("A")}
-      >
+      <span className="ig-ctl-sep" aria-hidden />
+      <button type="button" className="ig-ctl" aria-pressed={!blinking && side === "A"} onClick={() => step("A")}>
         ← A
       </button>
-      <button
-        type="button"
-        className="btn btn-secondary step-button"
-        aria-pressed={!blinking && side === "B"}
-        onClick={() => step("B")}
-      >
+      <button type="button" className="ig-ctl" aria-pressed={!blinking && side === "B"} onClick={() => step("B")}>
         B →
       </button>
     </div>

@@ -173,7 +173,7 @@ export function describeOutcome(patch: RoundPatch, answer: Answer): Outcome {
       tone,
       xpLabel,
       chose,
-      badge: `${patch.images.tag ?? "Real"} data`,
+      badge: `${patch.images.tag ?? "Unlabelled"} data`,
       badgeTone: "muted",
       cardName: r.name,
       cardDescription: `${r.type} · discovered ${r.year} by ${r.discoverer}`,

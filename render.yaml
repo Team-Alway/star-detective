@@ -1,0 +1,48 @@
+# Render Blueprint for Star Detective: FastAPI backend + PostgreSQL, both on the free plan.
+# The Next.js frontend is deployed separately on Vercel (see DEPLOY.md).
+#
+# Free-plan limits to know:
+#   - The web service sleeps after ~15 min without traffic; the next request wakes it (~1 min).
+#   - Its disk is wiped on every restart/deploy. Accounts live in Postgres, so they survive.
+#     The committed backend/sky_cache (co-added frames for the 5 preset targets) is restored
+#     from git on every deploy; anything else is re-fetched from NASA's IRSA archive on demand.
+#   - Free Postgres databases expire 30 days after creation unless upgraded.
+
+databases:
+  - name: star-detective-db
+    plan: free
+    databaseName: star_detective
+    user: star_detective
+    ipAllowList: [] # only reachable from Render services, not the public internet
+
+services:
+  - type: web
+    name: star-detective-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips="*"
+    healthCheckPath: /api/v1/health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: DATABASE_URL
+        fromDatabase:
+          name: star-detective-db
+          property: connectionString
+      - key: SD_JWT_SECRET
+        generateValue: true
+      # Cookies are only sent over HTTPS in production.
+      - key: SD_COOKIE_SECURE
+        value: "1"
+      # "lax" works because the Vercel site proxies account calls through its own /api/* path.
+      - key: SD_COOKIE_SAMESITE
+        value: lax
+      # Your Vercel URL(s), comma-separated, e.g. https://star-detective.vercel.app
+      - key: CORS_ORIGINS
+        sync: false
+      # Add a newer SPHEREx release in front when IRSA publishes it, e.g. spherex_dr2,spherex_dr1
+      - key: SD_SPHEREX_COLLECTIONS
+        value: spherex_dr1

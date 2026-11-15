@@ -1,0 +1,4 @@
+-r requirements.txt
+# tests only: pytest, httpx2 (starlette TestClient)
+pytest>=8.0
+httpx2

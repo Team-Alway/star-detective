@@ -9,6 +9,831 @@
     "version": "1.0.0"
   },
   "paths": {
+    "/api/auth/signup": {
+      "post": {
+        "tags": [
+          "Auth & Progress"
+        ],
+        "summary": "Create account",
+        "operationId": "signup_api_auth_signup_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": [
+          "Auth & Progress"
+        ],
+        "summary": "Log in",
+        "operationId": "login_api_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": [
+          "Auth & Progress"
+        ],
+        "summary": "Log out",
+        "operationId": "logout_api_auth_logout_post",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "tags": [
+          "Auth & Progress"
+        ],
+        "summary": "Current user",
+        "operationId": "me_api_auth_me_get",
+        "parameters": [
+          {
+            "name": "sd_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sd Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/progress": {
+      "get": {
+        "tags": [
+          "Auth & Progress"
+        ],
+        "summary": "Get saved progress",
+        "operationId": "get_progress_api_progress_get",
+        "parameters": [
+          {
+            "name": "sd_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sd Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Progress"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Auth & Progress"
+        ],
+        "summary": "Save progress",
+        "operationId": "put_progress_api_progress_put",
+        "parameters": [
+          {
+            "name": "sd_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sd Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Progress"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Progress"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/leaderboard": {
+      "get": {
+        "tags": [
+          "Auth & Progress"
+        ],
+        "summary": "Top 20 by XP",
+        "operationId": "leaderboard_api_leaderboard_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LeaderboardEntry"
+                  },
+                  "type": "array",
+                  "title": "Response Leaderboard Api Leaderboard Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/targets": {
+      "get": {
+        "tags": [
+          "Real SPHEREx sky (IRSA)"
+        ],
+        "summary": "Preset challenge targets (positions propagated to epoch 2025.6)",
+        "operationId": "get_targets_api_v2_targets_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/resolve": {
+      "get": {
+        "tags": [
+          "Real SPHEREx sky (IRSA)"
+        ],
+        "summary": "Resolve an object name to RA/Dec via CDS Sesame",
+        "operationId": "resolve_api_v2_resolve_get",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120,
+              "title": "Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/sky/search": {
+      "get": {
+        "tags": [
+          "Real SPHEREx sky (IRSA)"
+        ],
+        "summary": "List SPHEREx epochs (visits) covering a sky position",
+        "operationId": "sky_search_api_v2_sky_search_get",
+        "parameters": [
+          {
+            "name": "ra",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "maximum": 360,
+              "minimum": 0,
+              "description": "Right ascension, degrees (ICRS)",
+              "title": "Ra"
+            },
+            "description": "Right ascension, degrees (ICRS)"
+          },
+          {
+            "name": "dec",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "maximum": 90,
+              "minimum": -90,
+              "description": "Declination, degrees (ICRS)",
+              "title": "Dec"
+            },
+            "description": "Declination, degrees (ICRS)"
+          },
+          {
+            "name": "fov",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 30,
+              "minimum": 1,
+              "description": "Field of view, arcmin",
+              "default": 6.0,
+              "title": "Fov"
+            },
+            "description": "Field of view, arcmin"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/sky/frame.png": {
+      "get": {
+        "tags": [
+          "Real SPHEREx sky (IRSA)"
+        ],
+        "summary": "Co-added frame of one epoch on the common grid",
+        "operationId": "sky_frame_api_v2_sky_frame_png_get",
+        "parameters": [
+          {
+            "name": "ra",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "maximum": 360,
+              "minimum": 0,
+              "description": "Right ascension, degrees (ICRS)",
+              "title": "Ra"
+            },
+            "description": "Right ascension, degrees (ICRS)"
+          },
+          {
+            "name": "dec",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "maximum": 90,
+              "minimum": -90,
+              "description": "Declination, degrees (ICRS)",
+              "title": "Dec"
+            },
+            "description": "Declination, degrees (ICRS)"
+          },
+          {
+            "name": "fov",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 30,
+              "minimum": 1,
+              "description": "Field of view, arcmin",
+              "default": 6.0,
+              "title": "Fov"
+            },
+            "description": "Field of view, arcmin"
+          },
+          {
+            "name": "epoch",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Epoch"
+            }
+          },
+          {
+            "name": "detector",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(all|[1-6])$",
+              "description": "SPHEREx detector 1..6 or 'all' (co-add)",
+              "default": "all",
+              "title": "Detector"
+            },
+            "description": "SPHEREx detector 1..6 or 'all' (co-add)"
+          },
+          {
+            "name": "stretch",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "asinh",
+                "linear",
+                "log"
+              ],
+              "type": "string",
+              "default": "asinh",
+              "title": "Stretch"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 2048,
+              "minimum": 64,
+              "description": "Output PNG size in px",
+              "default": 512,
+              "title": "Size"
+            },
+            "description": "Output PNG size in px"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/sky/combine.png": {
+      "get": {
+        "tags": [
+          "Real SPHEREx sky (IRSA)"
+        ],
+        "summary": "Difference (b - a) or sum of two epochs",
+        "operationId": "sky_combine_api_v2_sky_combine_png_get",
+        "parameters": [
+          {
+            "name": "ra",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "maximum": 360,
+              "minimum": 0,
+              "description": "Right ascension, degrees (ICRS)",
+              "title": "Ra"
+            },
+            "description": "Right ascension, degrees (ICRS)"
+          },
+          {
+            "name": "dec",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "maximum": 90,
+              "minimum": -90,
+              "description": "Declination, degrees (ICRS)",
+              "title": "Dec"
+            },
+            "description": "Declination, degrees (ICRS)"
+          },
+          {
+            "name": "fov",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 30,
+              "minimum": 1,
+              "description": "Field of view, arcmin",
+              "default": 6.0,
+              "title": "Fov"
+            },
+            "description": "Field of view, arcmin"
+          },
+          {
+            "name": "a",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "A"
+            }
+          },
+          {
+            "name": "b",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "B"
+            }
+          },
+          {
+            "name": "op",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "diff",
+                "sum"
+              ],
+              "type": "string",
+              "default": "diff",
+              "title": "Op"
+            }
+          },
+          {
+            "name": "detector",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(all|[1-6])$",
+              "description": "SPHEREx detector 1..6 or 'all' (co-add)",
+              "default": "all",
+              "title": "Detector"
+            },
+            "description": "SPHEREx detector 1..6 or 'all' (co-add)"
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 2048,
+              "minimum": 64,
+              "description": "Output PNG size in px",
+              "default": 512,
+              "title": "Size"
+            },
+            "description": "Output PNG size in px"
+          },
+          {
+            "name": "stretch",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "asinh",
+                "linear",
+                "log"
+              ],
+              "type": "string",
+              "default": "asinh",
+              "title": "Stretch"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/sky/spectrum": {
+      "get": {
+        "tags": [
+          "Real SPHEREx sky (IRSA)"
+        ],
+        "summary": "On-the-fly SPHEREx spectrum at a position",
+        "operationId": "sky_spectrum_api_v2_sky_spectrum_get",
+        "parameters": [
+          {
+            "name": "ra",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "maximum": 360,
+              "minimum": 0,
+              "description": "Right ascension, degrees (ICRS)",
+              "title": "Ra"
+            },
+            "description": "Right ascension, degrees (ICRS)"
+          },
+          {
+            "name": "dec",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "maximum": 90,
+              "minimum": -90,
+              "description": "Declination, degrees (ICRS)",
+              "title": "Dec"
+            },
+            "description": "Declination, degrees (ICRS)"
+          },
+          {
+            "name": "epoch",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "all",
+              "title": "Epoch"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/sky/meta": {
+      "get": {
+        "tags": [
+          "Real SPHEREx sky (IRSA)"
+        ],
+        "summary": "Provenance and quality flags for one epoch's frame",
+        "operationId": "sky_meta_api_v2_sky_meta_get",
+        "parameters": [
+          {
+            "name": "ra",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "maximum": 360,
+              "minimum": 0,
+              "description": "Right ascension, degrees (ICRS)",
+              "title": "Ra"
+            },
+            "description": "Right ascension, degrees (ICRS)"
+          },
+          {
+            "name": "dec",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "maximum": 90,
+              "minimum": -90,
+              "description": "Declination, degrees (ICRS)",
+              "title": "Dec"
+            },
+            "description": "Declination, degrees (ICRS)"
+          },
+          {
+            "name": "fov",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 30,
+              "minimum": 1,
+              "description": "Field of view, arcmin",
+              "default": 6.0,
+              "title": "Fov"
+            },
+            "description": "Field of view, arcmin"
+          },
+          {
+            "name": "epoch",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Epoch"
+            }
+          },
+          {
+            "name": "detector",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(all|[1-6])$",
+              "description": "SPHEREx detector 1..6 or 'all' (co-add)",
+              "default": "all",
+              "title": "Detector"
+            },
+            "description": "SPHEREx detector 1..6 or 'all' (co-add)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/health": {
       "get": {
         "tags": [
@@ -902,6 +1727,24 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
+      "LeaderboardEntry": {
+        "properties": {
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          },
+          "xp": {
+            "type": "integer",
+            "title": "Xp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "display_name",
+          "xp"
+        ],
+        "title": "LeaderboardEntry"
+      },
       "LessonCardSchema": {
         "properties": {
           "title": {
@@ -927,6 +1770,24 @@
           "icon_name"
         ],
         "title": "LessonCardSchema"
+      },
+      "LoginRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "LoginRequest"
       },
       "PatchDetail": {
         "properties": {
@@ -1233,6 +2094,70 @@
         ],
         "title": "PatchSummary"
       },
+      "Progress": {
+        "properties": {
+          "xp": {
+            "type": "integer",
+            "title": "Xp",
+            "default": 0
+          },
+          "stage": {
+            "type": "integer",
+            "title": "Stage",
+            "default": 1
+          },
+          "results": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "type": "object",
+            "title": "Results",
+            "default": {}
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "title": "Progress"
+      },
+      "SignupRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 254,
+            "minLength": 3,
+            "title": "Email"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 256,
+            "minLength": 8,
+            "title": "Password"
+          },
+          "display_name": {
+            "type": "string",
+            "maxLength": 60,
+            "minLength": 1,
+            "title": "Display Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "password",
+          "display_name"
+        ],
+        "title": "SignupRequest"
+      },
       "SpotCheckRequest": {
         "properties": {
           "click_x": {
@@ -1368,6 +2293,29 @@
           "feedback"
         ],
         "title": "StageQuestionSchema"
+      },
+      "User": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "email",
+          "display_name"
+        ],
+        "title": "User"
       },
       "ValidationError": {
         "properties": {

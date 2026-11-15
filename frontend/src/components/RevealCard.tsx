@@ -1,3 +1,6 @@
+import "@/app/inner-game.css";
+
+/** The object behind a patch, laid out as spec-sheet rows. */
 export default function RevealCard({
   name,
   description,
@@ -12,13 +15,21 @@ export default function RevealCard({
   link?: { label: string; href: string };
 }) {
   return (
-    <div className="reveal-card">
-      <h2 className="reveal-card-name">{name}</h2>
-      <p className="reveal-card-detail">{description}</p>
-      <p className="reveal-card-dates">{dates}</p>
-      <p className="reveal-card-detail">{note}</p>
+    <div className="ig-rc">
+      <h2 className="ig-rc-name">{name}</h2>
+      <dl className="ig-spec">
+        <div>
+          <dt>Object</dt>
+          <dd>{description}</dd>
+        </div>
+        <div>
+          <dt>Dates</dt>
+          <dd>{dates}</dd>
+        </div>
+      </dl>
+      <p className="ig-rc-note">{note}</p>
       {link && (
-        <a className="reveal-card-link" href={link.href} target="_blank" rel="noreferrer">
+        <a className="ig-rc-link" href={link.href} target="_blank" rel="noreferrer">
           {link.label}
         </a>
       )}

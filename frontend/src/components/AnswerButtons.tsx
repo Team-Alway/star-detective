@@ -1,6 +1,7 @@
 "use client";
 
 import type { Answer } from "@/lib/demo";
+import "@/app/inner-game.css";
 
 export default function AnswerButtons({
   onAnswer,
@@ -12,23 +13,25 @@ export default function AnswerButtons({
   chosen?: Answer | null;
 }) {
   return (
-    <div className="answer-pair" role="group" aria-label="Did anything move?">
+    <div className="ig-answers" role="group" aria-label="Did anything move?">
       <button
         type="button"
-        className="btn btn-secondary"
+        className="ig-answer"
         disabled={disabled}
         aria-pressed={chosen === "still"}
         onClick={() => onAnswer?.("still")}
       >
+        {chosen === "still" && <span aria-hidden>✓</span>}
         Nothing moving
       </button>
       <button
         type="button"
-        className="btn btn-primary"
+        className="ig-answer ig-answer-primary"
         disabled={disabled}
         aria-pressed={chosen === "moved"}
         onClick={() => onAnswer?.("moved")}
       >
+        {chosen === "moved" && <span aria-hidden>✓</span>}
         I see movement
       </button>
     </div>

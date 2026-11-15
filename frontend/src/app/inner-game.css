@@ -1,0 +1,317 @@
+/* ==========================================================================
+   Inner game screens: Academy (stages 1-3), Training (stage 4), Summary.
+   "Space mission" spec-sheet look. Everything is scoped under .ig-* classes.
+   Fonts: --font-orbit (hero words), --font-head (labels), --font-sans (body),
+   --font-data (numbers).
+   ========================================================================== */
+
+.ig-page {
+  --ig-line: rgba(255, 255, 255, 0.12);
+  --ig-fill: rgba(255, 255, 255, 0.05);
+  --ig-fill-2: rgba(255, 255, 255, 0.1);
+  --ig-body: #e4e8f2;
+  min-height: 100vh;
+  overflow-x: clip;
+  background: #05070f;
+  color: var(--sd-text);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+.ig-wrap { position: relative; box-sizing: border-box; width: 100%; max-width: 1200px; margin: 0 auto; padding: 32px 24px 96px; }
+.ig-page :is(button, a, [tabindex]):focus-visible { outline: 2px solid var(--sd-accent); outline-offset: 3px; }
+
+/* ---------- Type ---------- */
+.ig-eyebrow { margin: 0; color: var(--sd-muted); font: 600 12px/1.5 var(--font-head), sans-serif; letter-spacing: 0.28em; text-transform: uppercase; }
+.ig-eyebrow b { color: var(--sd-accent); font-weight: 600; }
+.ig-title { position: relative; z-index: 1; margin: 14px 0 0; color: var(--sd-text); font: 800 clamp(44px, 9vw, 140px)/0.92 var(--font-orbit), sans-serif; letter-spacing: -0.02em; text-transform: uppercase; overflow-wrap: break-word; }
+.ig-title-md { font-size: clamp(40px, 7vw, 104px); }
+.ig-title-word { display: inline-block; overflow: hidden; padding-bottom: 0.06em; margin-bottom: -0.06em; vertical-align: top; }
+.ig-title-word > span { display: inline-block; }
+.ig-lede { position: relative; z-index: 1; max-width: 34em; margin: 24px 0 0; color: var(--ig-body); font-size: clamp(18px, 1.6vw, 21px); line-height: 1.55; }
+.ig-section-label { display: flex; align-items: center; gap: 16px; margin: 0; color: var(--sd-muted); font: 600 12px/1 var(--font-head), sans-serif; letter-spacing: 0.28em; text-transform: uppercase; }
+.ig-section-label::after { content: ""; flex: 1; height: 1px; background: var(--ig-line); }
+.ig-mono { font-family: var(--font-data), monospace; }
+
+/* ---------- Pills ---------- */
+.ig-pill { display: inline-flex; box-sizing: border-box; min-height: 48px; align-items: center; justify-content: center; gap: 10px; padding: 0 24px; border: 0; border-radius: 999px; background: var(--ig-fill-2); color: var(--sd-text); font: 600 15px/1 var(--font-head), sans-serif; letter-spacing: 0.12em; text-transform: uppercase; text-decoration: none; white-space: nowrap; cursor: pointer; transition: background 200ms ease, color 200ms ease, transform 200ms ease; }
+.ig-pill:hover:not(:disabled) { background: rgba(255, 255, 255, 0.18); }
+.ig-pill:disabled { opacity: 0.35; cursor: not-allowed; }
+.ig-pill-primary { background: #fff; color: #05070f; }
+.ig-pill-primary:hover:not(:disabled) { background: var(--sd-accent); }
+.ig-pill-ghost { background: transparent; box-shadow: inset 0 0 0 1px var(--ig-line); }
+.ig-pill-lg { min-height: 56px; padding: 0 32px; font-size: 16px; }
+.ig-pill .ig-arrow { transition: transform 200ms ease; }
+.ig-pill:hover:not(:disabled) .ig-arrow { transform: translateX(4px); }
+.ig-link { color: var(--sd-muted); font: 600 13px/1 var(--font-head), sans-serif; letter-spacing: 0.16em; text-transform: uppercase; text-decoration: none; background: none; border: 0; padding: 14px 0; cursor: pointer; }
+.ig-link:hover { color: var(--sd-text); }
+
+/* ---------- Spec sheet rows ---------- */
+.ig-spec { margin: 0; padding: 0; border-top: 1px solid var(--ig-line); }
+.ig-spec > div { display: flex; align-items: baseline; justify-content: space-between; gap: 24px; padding: 11px 0; border-bottom: 1px solid var(--ig-line); }
+.ig-spec dt { color: var(--sd-muted); font: 600 12px/1.3 var(--font-head), sans-serif; letter-spacing: 0.2em; text-transform: uppercase; white-space: nowrap; }
+.ig-spec dd { min-width: 0; margin: 0; color: var(--sd-text); font: 500 14px/1.35 var(--font-data), monospace; text-align: right; overflow-wrap: anywhere; }
+.ig-spec dd.ig-accent { color: var(--sd-accent); }
+
+/* ---------- Thin progress line ---------- */
+.ig-meter { position: relative; height: 2px; margin-top: 14px; background: var(--ig-line); }
+.ig-meter > span { position: absolute; inset: 0 auto 0 0; background: var(--sd-accent); transition: width 600ms ease; }
+
+/* ---------- Orbit decoration ---------- */
+.ig-orbits { position: absolute; z-index: 0; pointer-events: none; color: rgba(201, 182, 255, 0.35); }
+.ig-orbits circle.ig-ring { fill: none; stroke: currentColor; stroke-width: 1; vector-effect: non-scaling-stroke; }
+.ig-orbits circle.ig-dot { fill: var(--sd-accent); }
+.ig-hero .ig-orbits { right: -140px; top: -120px; width: 560px; height: 560px; }
+
+/* ---------- Academy: top bar + hero ---------- */
+.ig-topbar { position: relative; z-index: 2; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px; }
+.ig-topbar-left { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 20px; }
+.ig-hero { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 40px 64px; align-items: end; margin-top: 40px; }
+.ig-hero-side { position: relative; z-index: 1; }
+.ig-hero-actions { position: relative; z-index: 1; display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
+
+.ig-toast { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 24px 0 0; padding: 10px 10px 10px 24px; border-radius: 999px; background: rgba(201, 182, 255, 0.14); color: var(--sd-text); font: 600 15px/1.3 var(--font-head), sans-serif; letter-spacing: 0.08em; text-transform: uppercase; }
+.ig-toast .ig-pill { min-height: 44px; padding: 0 18px; font-size: 13px; }
+.ig-burst { position: fixed; inset: 0; z-index: 50; overflow: hidden; pointer-events: none; }
+.ig-burst-dot { position: absolute; left: 50%; top: 45%; width: 8px; height: 8px; border-radius: 50%; background: var(--sd-accent); box-shadow: 0 0 12px var(--sd-accent); }
+.ig-burst-dot:nth-child(3n) { background: #fff; box-shadow: 0 0 12px #fff; }
+
+/* ---------- Academy: numbered journey ---------- */
+.ig-journey-head { margin-top: 88px; }
+.ig-journey { margin: 24px 0 0; padding: 0; list-style: none; }
+.ig-row { border-bottom: 1px solid var(--ig-line); }
+.ig-row-btn { display: grid; box-sizing: border-box; width: 100%; grid-template-columns: 132px minmax(0, 1fr) 150px 56px; align-items: center; gap: 8px 28px; padding: 30px 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; text-decoration: none; cursor: pointer; }
+.ig-row-num { color: rgba(255, 255, 255, 0.2); font: 800 clamp(44px, 6vw, 76px)/1 var(--font-orbit), sans-serif; letter-spacing: -0.03em; transition: color 250ms ease; }
+.ig-row-name { display: block; color: var(--sd-text); font: 700 clamp(22px, 2.6vw, 32px)/1.1 var(--font-head), sans-serif; letter-spacing: 0.05em; text-transform: uppercase; }
+.ig-row-line { display: block; margin-top: 8px; color: var(--ig-body); font-size: 18px; line-height: 1.45; }
+.ig-row-topics { display: block; margin-top: 8px; color: var(--sd-muted); font: 500 13px/1.5 var(--font-data), monospace; }
+.ig-row-state { color: var(--sd-muted); font: 600 12px/1.3 var(--font-head), sans-serif; letter-spacing: 0.2em; text-transform: uppercase; }
+.ig-state-done { color: var(--sd-correct); }
+.ig-state-ready { color: var(--sd-accent); }
+.ig-state-open { color: var(--sd-simulated); }
+.ig-row-arrow { display: grid; width: 56px; height: 56px; place-items: center; border-radius: 50%; background: var(--ig-fill-2); font-size: 22px; transition: background 200ms ease, color 200ms ease, transform 200ms ease; }
+.ig-row-btn:not([aria-disabled="true"]):hover .ig-row-num, .ig-row-current .ig-row-num { color: var(--sd-accent); }
+.ig-row-btn:not([aria-disabled="true"]):hover .ig-row-arrow, .ig-row-current .ig-row-arrow { background: #fff; color: #05070f; }
+.ig-row-btn:not([aria-disabled="true"]):hover .ig-row-arrow { transform: translateX(4px); }
+.ig-row-btn[aria-disabled="true"] { cursor: not-allowed; }
+.ig-row-btn[aria-disabled="true"] > :not(.ig-row-state) { opacity: 0.4; }
+.ig-journey-foot { margin: 24px 0 0; color: var(--sd-muted); font-size: 15px; line-height: 1.5; }
+
+/* ---------- Academy: lesson ---------- */
+.ig-lesson-head { position: relative; margin-top: 36px; }
+.ig-steps { display: flex; gap: 6px; margin-top: 32px; }
+.ig-step { position: relative; flex: 1 1 0; min-width: 0; height: 44px; padding: 0; border: 0; background: none; cursor: pointer; }
+.ig-step::after { content: ""; position: absolute; left: 0; right: 0; top: 21px; height: 2px; background: rgba(255, 255, 255, 0.16); transition: background 250ms ease, height 250ms ease, top 250ms ease; }
+.ig-step:hover::after { background: rgba(255, 255, 255, 0.4); }
+.ig-step-past::after { background: rgba(201, 182, 255, 0.55); }
+.ig-step-current::after { top: 20px; height: 4px; background: var(--sd-accent); }
+.ig-step-check { flex: 0 0 64px; }
+.ig-step-check span { position: absolute; left: 0; right: 0; top: 0; color: var(--sd-muted); font: 600 10px/1 var(--font-head), sans-serif; letter-spacing: 0.2em; text-align: center; }
+.ig-step-check.ig-step-current span { color: var(--sd-accent); }
+
+.ig-card { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 40px 64px; align-items: start; margin-top: 40px; }
+.ig-card-solo { grid-template-columns: minmax(0, 1fr); }
+.ig-count { margin: 0; color: var(--sd-muted); font: 500 15px/1 var(--font-data), monospace; letter-spacing: 0.04em; }
+.ig-count b { color: var(--sd-text); font-size: 28px; font-weight: 500; }
+.ig-card-kicker { display: flex; align-items: center; gap: 16px; }
+.ig-card-icon { display: grid; width: 48px; height: 48px; place-items: center; border-radius: 50%; background: var(--ig-fill-2); color: var(--sd-accent); }
+.ig-card-title { margin: 20px 0 0; color: var(--sd-text); font: 700 clamp(32px, 4vw, 52px)/1.05 var(--font-head), sans-serif; letter-spacing: 0.01em; }
+.ig-card-text { max-width: 32em; margin: 20px 0 0; color: var(--ig-body); font-size: clamp(19px, 1.7vw, 22px); line-height: 1.6; }
+.ig-tip { margin-top: 32px; padding: 2px 0 2px 20px; border-left: 2px solid var(--sd-accent); }
+.ig-tip p { margin: 0; }
+.ig-tip p + p { margin-top: 8px; color: var(--ig-body); font-size: 18px; line-height: 1.55; }
+
+.ig-lesson-nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 56px; padding-top: 24px; border-top: 1px solid var(--ig-line); }
+.ig-lesson-hint { color: var(--sd-muted); font: 500 13px/1.4 var(--font-data), monospace; }
+
+/* ---------- Lesson visuals ---------- */
+.ig-vis { box-sizing: border-box; padding: 24px; border-radius: 28px; background: var(--ig-fill); }
+.ig-vis-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+.ig-vis-cap { margin: 16px 0 0; color: var(--ig-body); font-size: 16px; line-height: 1.5; }
+.ig-seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; background: var(--ig-fill-2); }
+.ig-seg button { min-height: 44px; padding: 0 16px; border: 0; border-radius: 999px; background: none; color: var(--sd-muted); font: 600 13px/1 var(--font-head), sans-serif; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; }
+.ig-seg button[aria-pressed="true"] { background: #fff; color: #05070f; }
+.ig-mini-sky { position: relative; height: 200px; overflow: hidden; border-radius: 18px; background: #010309; }
+.ig-star { position: absolute; width: 4px; height: 4px; border-radius: 50%; background: #fff; }
+.ig-star-lg { width: 6px; height: 6px; box-shadow: 0 0 8px #fff; }
+.ig-glow { position: absolute; left: 50%; top: 50%; width: 64px; height: 64px; border-radius: 50%; transform: translate(-50%, -50%); background: radial-gradient(circle, #ffe9b8 0%, #ff7aa8 45%, rgba(160, 80, 255, 0) 72%); transition: opacity 400ms ease; }
+.ig-mini-tag { position: absolute; left: 12px; bottom: 12px; padding: 6px 10px; border-radius: 8px; background: rgba(5, 7, 15, 0.85); color: var(--sd-text); font: 500 13px/1.2 var(--font-data), monospace; }
+.ig-mover { position: absolute; width: 10px; height: 10px; border-radius: 50%; background: #ffd27a; box-shadow: 0 0 12px #ffd27a; transform: translate(-50%, -50%); transition: left 150ms linear, top 150ms linear; }
+.ig-band { display: grid; grid-template-columns: 1fr; gap: 10px; }
+.ig-band-row { display: grid; grid-template-columns: 110px minmax(0, 1fr) 64px; align-items: center; gap: 14px; color: var(--sd-muted); font: 500 14px/1.3 var(--font-data), monospace; }
+.ig-band-bar { height: 10px; border-radius: 999px; }
+.ig-bignums { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.ig-bignum b { display: block; color: var(--sd-text); font: 800 clamp(26px, 3vw, 36px)/1 var(--font-orbit), sans-serif; letter-spacing: -0.02em; }
+.ig-bignum span { display: block; margin-top: 8px; color: var(--sd-muted); font: 600 12px/1.3 var(--font-head), sans-serif; letter-spacing: 0.16em; text-transform: uppercase; }
+.ig-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.ig-compare h4 { margin: 0; font: 700 18px/1.2 var(--font-head), sans-serif; letter-spacing: 0.06em; text-transform: uppercase; }
+.ig-compare p { margin: 8px 0 0; color: var(--ig-body); font-size: 16px; line-height: 1.45; }
+.ig-compare .ig-spec { margin-top: 12px; }
+.ig-au-line { position: relative; height: 2px; margin: 28px 6px 0; background: var(--ig-line); }
+.ig-au-dot { position: absolute; top: 50%; width: 12px; height: 12px; border-radius: 50%; transform: translate(-50%, -50%); }
+.ig-parallax { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: end; text-align: center; }
+.ig-parallax p { margin: 10px 0 0; color: var(--ig-body); font-size: 15px; line-height: 1.35; }
+
+/* ---------- Stage question ---------- */
+.ig-question { margin-top: 40px; }
+.ig-q-prompt { max-width: 26em; margin: 18px 0 0; color: var(--sd-text); font: 600 clamp(24px, 3vw, 36px)/1.25 var(--font-head), sans-serif; letter-spacing: 0.01em; }
+.ig-q-grid { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 32px 48px; align-items: start; margin-top: 32px; }
+.ig-options { display: grid; gap: 12px; }
+.ig-option { display: flex; box-sizing: border-box; width: 100%; min-height: 68px; align-items: center; gap: 16px; padding: 12px 24px 12px 12px; border: 0; border-radius: 34px; background: var(--ig-fill); color: var(--sd-text); font: 500 18px/1.4 var(--font-sans), sans-serif; text-align: left; cursor: pointer; transition: background 200ms ease, box-shadow 200ms ease; }
+.ig-option:hover:not(:disabled) { background: rgba(255, 255, 255, 0.11); }
+.ig-option:disabled { cursor: default; }
+.ig-option-letter { display: grid; flex: 0 0 44px; height: 44px; place-items: center; border-radius: 50%; background: var(--ig-fill-2); font: 600 15px/1 var(--font-data), monospace; }
+.ig-option-text { flex: 1; min-width: 0; }
+.ig-option-mark { flex: 0 0 auto; font: 700 13px/1 var(--font-head), sans-serif; letter-spacing: 0.16em; text-transform: uppercase; }
+.ig-option-right { background: rgba(105, 225, 176, 0.14); box-shadow: inset 0 0 0 2px var(--sd-correct); }
+.ig-option-right .ig-option-letter { background: var(--sd-correct); color: #05070f; }
+.ig-option-right .ig-option-mark { color: var(--sd-correct); }
+.ig-option-wrong { background: rgba(255, 139, 162, 0.12); box-shadow: inset 0 0 0 2px var(--sd-wrong); }
+.ig-option-wrong .ig-option-letter { background: var(--sd-wrong); color: #05070f; }
+.ig-option-wrong .ig-option-mark { color: var(--sd-wrong); }
+.ig-feedback { min-height: 28px; margin-top: 24px; font-size: 18px; line-height: 1.55; }
+.ig-feedback p { margin: 0; max-width: 36em; }
+.ig-feedback-ok { color: var(--sd-correct); }
+.ig-feedback-bad { color: var(--sd-wrong); }
+.ig-feedback span { color: var(--ig-body); }
+.ig-q-mascot { display: flex; justify-content: center; }
+
+/* ---------- Training (play) ---------- */
+.ig-play-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px 48px; }
+.ig-play-head .ig-spec { width: min(100%, 340px); }
+.ig-banner { margin: 0 0 24px; padding: 12px 20px; border-radius: 20px; background: rgba(131, 217, 241, 0.1); color: var(--ig-body); font-size: 15px; line-height: 1.45; }
+.ig-banner strong { color: var(--sd-text); font-weight: 600; }
+.ig-play-grid { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(300px, 1fr); gap: 32px 56px; align-items: start; margin-top: 36px; }
+.ig-sky { width: 100%; max-width: min(100%, 78svh); }
+.ig-sky .sky-frame { max-width: none; border-radius: 20px; }
+.ig-sky .sky-date, .ig-sky .sky-scale { background: rgba(5, 7, 15, 0.82); backdrop-filter: blur(8px); border-radius: 999px; }
+.ig-sky-note { margin: 12px 0 0; color: var(--sd-muted); font-size: 14px; line-height: 1.5; }
+
+.ig-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; width: fit-content; max-width: 100%; box-sizing: border-box; margin-top: 12px; padding: 4px; border-radius: 999px; background: rgba(255, 255, 255, 0.06); backdrop-filter: blur(12px); }
+.ig-ctl { display: inline-flex; min-height: 44px; min-width: 44px; align-items: center; justify-content: center; gap: 8px; padding: 0 16px; border: 0; border-radius: 999px; background: transparent; color: var(--sd-text); font: 600 14px/1 var(--font-head), sans-serif; letter-spacing: 0.12em; text-transform: uppercase; white-space: nowrap; cursor: pointer; transition: background 200ms ease; }
+.ig-ctl:hover { background: rgba(255, 255, 255, 0.1); }
+.ig-ctl[aria-pressed="true"] { background: rgba(255, 255, 255, 0.16); }
+.ig-ctl-main { background: #fff; color: #05070f; }
+.ig-ctl-main:hover { background: var(--sd-accent); }
+.ig-ctl-main[aria-pressed="true"] { background: var(--sd-accent); }
+.ig-ctl small { color: inherit; font: 500 12px/1 var(--font-data), monospace; letter-spacing: 0; opacity: 0.7; text-transform: none; }
+.ig-ctl-sep { width: 1px; height: 24px; margin: 0 4px; background: var(--ig-line); }
+.ig-speed-group { display: flex; gap: 2px; }
+.ig-speed-cycle { display: none; }
+
+.ig-side { min-width: 0; }
+.ig-ask-q { margin: 14px 0 0; color: var(--sd-text); font: 700 clamp(28px, 3.2vw, 44px)/1.08 var(--font-head), sans-serif; letter-spacing: 0.01em; }
+.ig-side-copy { margin: 16px 0 0; color: var(--ig-body); font-size: 18px; line-height: 1.55; }
+.ig-answers { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 28px; }
+.ig-answer { display: inline-flex; box-sizing: border-box; min-height: 64px; align-items: center; justify-content: center; gap: 8px; padding: 0 16px; border: 0; border-radius: 999px; background: var(--ig-fill-2, rgba(255, 255, 255, 0.1)); color: var(--sd-text); font: 700 16px/1.1 var(--font-head), sans-serif; letter-spacing: 0.1em; text-align: center; text-transform: uppercase; cursor: pointer; transition: background 200ms ease, box-shadow 200ms ease; }
+.ig-answer:hover:not(:disabled) { background: rgba(255, 255, 255, 0.18); }
+.ig-answer-primary { background: #fff; color: #05070f; }
+.ig-answer-primary:hover:not(:disabled) { background: var(--sd-accent); }
+.ig-answer:disabled { opacity: 0.45; cursor: not-allowed; }
+.ig-answer[aria-pressed="true"] { opacity: 1; box-shadow: 0 0 0 2px #05070f, 0 0 0 4px var(--sd-accent); }
+.ig-recorded { margin: 12px 0 0; color: var(--sd-accent); font: 600 14px/1.4 var(--font-head), sans-serif; letter-spacing: 0.16em; text-transform: uppercase; }
+.ig-numbered { margin: 32px 0 0; padding: 0; list-style: none; border-top: 1px solid var(--ig-line); }
+.ig-numbered li { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 4px 12px; padding: 14px 0; border-bottom: 1px solid var(--ig-line); }
+.ig-numbered .ig-n { grid-row: span 2; color: var(--sd-accent); font: 800 20px/1.2 var(--font-orbit), sans-serif; }
+.ig-numbered .ig-n-name { color: var(--sd-text); font: 700 15px/1.3 var(--font-head), sans-serif; letter-spacing: 0.14em; text-transform: uppercase; }
+.ig-numbered .ig-n-desc { color: var(--ig-body); font-size: 16px; line-height: 1.45; }
+.ig-note { margin-top: 24px; padding: 2px 0 2px 16px; border-left: 2px solid var(--sd-accent); }
+.ig-note p { margin: 0; }
+.ig-note p + p { margin-top: 6px; color: var(--ig-body); font-size: 15px; line-height: 1.5; }
+.ig-side-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+
+.ig-reveal-title { margin: 14px 0 0; color: var(--sd-text); font: 800 clamp(34px, 4.6vw, 64px)/0.98 var(--font-orbit), sans-serif; letter-spacing: -0.02em; text-transform: uppercase; }
+.ig-reveal-xp { margin: 14px 0 0; color: var(--sd-muted); font: 500 clamp(22px, 2.4vw, 30px)/1.2 var(--font-data), monospace; }
+.ig-tone-correct { color: var(--sd-correct); }
+.ig-tone-wrong { color: var(--sd-wrong); }
+.ig-tone-neutral { color: var(--sd-muted); }
+.ig-reveal-choice { margin: 8px 0 0; color: var(--sd-muted); font-size: 16px; }
+.ig-side .type-tag { margin-top: 18px; height: 32px; padding: 0 14px; border-radius: 999px; background: var(--ig-fill-2); font: 600 12px/1 var(--font-head), sans-serif; letter-spacing: 0.16em; text-transform: uppercase; }
+.ig-rc { margin-top: 28px; }
+.ig-rc-name { margin: 0; color: var(--sd-text); font: 700 clamp(24px, 2.4vw, 30px)/1.15 var(--font-head), sans-serif; letter-spacing: 0.02em; }
+.ig-rc .ig-spec { margin-top: 14px; }
+.ig-rc-note { margin: 14px 0 0; color: var(--ig-body); font-size: 16px; line-height: 1.55; }
+.ig-rc-link { display: inline-block; margin-top: 10px; color: var(--sd-accent); font-size: 15px; text-decoration: none; }
+.ig-rc-link:hover { text-decoration: underline; }
+.ig-how { margin-top: 28px; }
+.ig-how p { margin: 0; }
+.ig-how p + p { margin-top: 10px; color: var(--sd-text); font-size: 18px; line-height: 1.55; }
+.ig-foot { margin: 20px 0 0; color: var(--sd-muted); font-size: 13px; line-height: 1.5; }
+
+/* XP counter (lives in the nav's play meta) */
+.ig-xp { display: inline-flex; align-items: baseline; gap: 8px; padding: 10px 16px; border-radius: 999px; background: rgba(255, 255, 255, 0.06); }
+.ig-xp-label { color: var(--sd-muted); font: 600 11px/1 var(--font-head), sans-serif; letter-spacing: 0.2em; }
+.ig-xp-value { color: var(--sd-accent); font: 500 15px/1 var(--font-data), monospace; }
+.ig-xp-gain .ig-xp-value { color: var(--sd-correct); }
+.ig-xp-loss .ig-xp-value { color: var(--sd-wrong); }
+
+/* ---------- Summary ---------- */
+.ig-sum-grid { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 560px); gap: 48px 72px; align-items: start; margin-top: 40px; }
+.ig-sum-grid .ig-orbits { left: -160px; top: -80px; width: 520px; height: 520px; }
+.ig-score { position: relative; z-index: 1; margin: 0; font: 800 clamp(96px, 15vw, 210px)/0.85 var(--font-orbit), sans-serif; letter-spacing: -0.04em; }
+.ig-score b { color: var(--sd-accent); font-weight: 800; }
+.ig-score span { color: rgba(255, 255, 255, 0.22); }
+.ig-score-cap { position: relative; z-index: 1; margin: 12px 0 0; color: var(--sd-muted); font: 600 13px/1 var(--font-head), sans-serif; letter-spacing: 0.28em; text-transform: uppercase; }
+.ig-sum-side .ig-spec { margin-top: 0; }
+.ig-results { margin: 20px 0 0; padding: 0; list-style: none; border-top: 1px solid var(--ig-line); }
+.ig-results li { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; align-items: center; gap: 4px 16px; padding: 18px 0; border-bottom: 1px solid var(--ig-line); }
+.ig-res-num { color: rgba(255, 255, 255, 0.28); font: 800 22px/1 var(--font-orbit), sans-serif; }
+.ig-res-title { display: block; color: var(--sd-text); font: 700 18px/1.25 var(--font-head), sans-serif; letter-spacing: 0.06em; text-transform: uppercase; }
+.ig-res-sub { display: block; margin-top: 4px; color: var(--ig-body); font-size: 15px; }
+.ig-res-end { text-align: right; }
+.ig-res-mark { display: block; font: 700 12px/1 var(--font-head), sans-serif; letter-spacing: 0.16em; text-transform: uppercase; }
+.ig-res-xp { display: block; margin-top: 6px; font: 500 14px/1 var(--font-data), monospace; }
+.ig-sum-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 36px; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 960px) {
+  .ig-hero, .ig-card, .ig-play-grid, .ig-sum-grid { grid-template-columns: minmax(0, 1fr); }
+  .ig-hero .ig-orbits { right: -200px; top: -120px; width: 420px; height: 420px; }
+  .ig-row-btn { grid-template-columns: 96px minmax(0, 1fr) 56px; }
+  .ig-row-num { grid-row: 1 / span 2; }
+  .ig-row-text { grid-column: 2; grid-row: 1; }
+  .ig-row-state { grid-column: 2; grid-row: 2; }
+  .ig-row-arrow { grid-column: 3; grid-row: 1 / span 2; }
+  .ig-sky { max-width: none; }
+}
+@media (max-width: 760px) {
+  .ig-wrap { padding: 20px 16px 72px; }
+  .ig-hero { margin-top: 28px; }
+  .ig-hero-actions .ig-pill { flex: 1 1 auto; }
+  .ig-journey-head { margin-top: 56px; }
+  .ig-row-btn { grid-template-columns: 52px minmax(0, 1fr) 44px; gap: 6px 14px; padding: 22px 0; }
+  .ig-row-num { font-size: 30px; align-self: start; padding-top: 2px; }
+  .ig-row-arrow { width: 44px; height: 44px; font-size: 18px; }
+  .ig-row-line { font-size: 17px; }
+  .ig-row-topics { display: none; }
+  .ig-steps { gap: 4px; margin-top: 24px; }
+  .ig-step-check { flex-basis: 48px; }
+  .ig-card { margin-top: 28px; }
+  .ig-vis { padding: 18px; border-radius: 22px; }
+  .ig-band-row { grid-template-columns: 92px minmax(0, 1fr); }
+  .ig-band-row > :last-child { display: none; }
+  .ig-compare { grid-template-columns: 1fr; }
+  .ig-lesson-nav { gap: 8px; margin-top: 40px; }
+  .ig-lesson-nav .ig-pill { flex: 1 1 0; padding: 0 16px; }
+  .ig-lesson-hint { display: none; }
+  .ig-q-grid { grid-template-columns: minmax(0, 1fr); }
+  .ig-option { font-size: 17px; padding-right: 16px; }
+  .ig-toast { border-radius: 24px; flex-wrap: wrap; padding: 12px 12px 12px 20px; }
+
+  .ig-play-head .ig-spec { display: none; }
+  .ig-play-grid { margin-top: 20px; gap: 24px; }
+  .ig-sky { width: calc(100% + 32px); max-width: none; margin: 0 -16px; }
+  .ig-sky .sky-frame { border-radius: 0; }
+  .ig-controls { width: auto; display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; }
+  .ig-ctl { padding: 0 8px; }
+  .ig-ctl-sep, .ig-speed-group, .ig-ctl-long { display: none; }
+  .ig-speed-cycle { display: inline-flex; }
+  .ig-answers { gap: 8px; margin-top: 20px; }
+  .ig-answer { font-size: 15px; letter-spacing: 0.06em; }
+  .ig-numbered { display: none; }
+  .ig-results li { grid-template-columns: 40px minmax(0, 1fr) auto; }
+  .ig-sum-actions .ig-pill { flex: 1 1 100%; }
+}
+@media (min-width: 761px) { .ig-ctl-short { display: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .ig-page *, .ig-page *::before, .ig-page *::after { transition: none !important; animation: none !important; }
+}

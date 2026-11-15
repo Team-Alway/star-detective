@@ -1,3 +1,5 @@
+import "@/app/inner-game.css";
+
 export default function XpCounter({
   value,
   tone = "default",
@@ -6,9 +8,9 @@ export default function XpCounter({
   tone?: "default" | "gain" | "loss";
 }) {
   return (
-    <div className={`xp xp-${tone}`} aria-live="polite">
-      <span className="xp-label">XP</span>
-      <span className="xp-value">{value}</span>
+    <div className={`ig-xp ig-xp-${tone}`} aria-live="polite">
+      <span className="ig-xp-label">XP</span>
+      <span className="ig-xp-value">{value}</span>
     </div>
   );
 }
