@@ -1,0 +1,1414 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Star Detective Academy API",
+    "description": "Backend API for **Star Detective Academy** (2026 NASA Space Apps Challenge: *Planet X and SPHEREx*).\n\n### Architecture Overview\n- **Stages 1\u20133 (Academy Onboarding):** Static frontend cards (`content/academy.ts`) + optional `GET /api/v1/academy/stages` endpoint.\n- **Stage 4 (Training / Quick Spotter):** Prepared SPHEREx & WISE infrared sky patches with known moving or variable objects (`stage=4`). Supports click verification and Discovery Unlocked reveal cards.\n- **Stage 5 (Explore / Viewer):** Multi-epoch comparison via Blink, Swipe, or Difference maps (`stage=5`), Dual-Vision toggle (`gamified` vs `raw`), and citizen-science candidate logging (`POST /api/v1/candidates`).\n- **Mandatory Metadata:** Every patch and rendered image includes its observation date (`YYYY-MM-DD`) and authenticity badge (`Real` or `Simulated`).",
+    "contact": {
+      "name": "Star Detective Backend Team"
+    },
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Health check & FITS cache status",
+        "description": "Returns API status, loaded sky patches count, and supported stages.",
+        "operationId": "health_check_api_v1_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/academy/stages": {
+      "get": {
+        "tags": [
+          "Academy (Stages 1-5)"
+        ],
+        "summary": "Get all 5 Star Detective Academy stages, lesson cards, and quiz questions",
+        "description": "Returns the complete 5-stage curriculum (Baby Steps, Known Findings, The Solar System, Training, Explore)\nincluding the ready-to-paste lesson cards and 3-option checkpoint questions (+20 XP each).",
+        "operationId": "get_academy_stages_api_v1_academy_stages_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AcademyStageSchema"
+                  },
+                  "type": "array",
+                  "title": "Response Get Academy Stages Api V1 Academy Stages Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/patches": {
+      "get": {
+        "tags": [
+          "Sky Patches (Stages 4 & 5)"
+        ],
+        "summary": "List sky patches for Stage 4 (Training) and Stage 5 (Explore)",
+        "description": "Lists available sky patches with RA/Dec coordinates, Aitoff all-sky map positions, observation dates,\n`Real`/`Simulated` tags, and Dual-Vision image URLs.",
+        "operationId": "list_patches_api_v1_patches_get",
+        "parameters": [
+          {
+            "name": "stage",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 5,
+                  "minimum": 4
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by stage: `4` for Stage 4: Training (Quick Spotter), `5` for Stage 5: Explore (Viewer)",
+              "title": "Stage"
+            },
+            "description": "Filter by stage: `4` for Stage 4: Training (Quick Spotter), `5` for Stage 5: Explore (Viewer)"
+          },
+          {
+            "name": "data_tag",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "Real",
+                    "Simulated"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by authenticity tag: `Real` or `Simulated`",
+              "title": "Data Tag"
+            },
+            "description": "Filter by authenticity tag: `Real` or `Simulated`"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PatchSummary"
+                  },
+                  "title": "Response List Patches Api V1 Patches Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/patches/{patch_id}": {
+      "get": {
+        "tags": [
+          "Sky Patches (Stages 4 & 5)"
+        ],
+        "summary": "Get detailed metadata and FITS telemetry for a single sky patch",
+        "description": "Returns full metadata, live FITS pixel statistics (`min_flux`, `max_flux`, `mean_flux`), observation dates,\nand optional answer/reveal details for a sky patch.",
+        "operationId": "get_patch_detail_api_v1_patches__patch_id__get",
+        "parameters": [
+          {
+            "name": "patch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Patch ID (e.g., `wise0855`, `barnard`, `luhman16`, `rw_aur`, `epsilon_indi`, `nep_deep`)",
+              "title": "Patch Id"
+            },
+            "description": "Patch ID (e.g., `wise0855`, `barnard`, `luhman16`, `rw_aur`, `epsilon_indi`, `nep_deep`)"
+          },
+          {
+            "name": "include_answer",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Set to `true` if the frontend wants the known anomaly coordinates and reveal card immediately",
+              "default": true,
+              "title": "Include Answer"
+            },
+            "description": "Set to `true` if the frontend wants the known anomaly coordinates and reveal card immediately"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatchDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/patches/{patch_id}/image/{epoch}": {
+      "get": {
+        "tags": [
+          "FITS Image Rendering & Dual-Vision"
+        ],
+        "summary": "Render Epoch 1 or Epoch 2 FITS image as PNG (Gamified vs Raw Dual-Vision)",
+        "description": "Streams a rendered PNG directly from the underlying NASA FITS array.\nIncludes `X-Observation-Date` and `X-Data-Tag` (`Real` or `Simulated`) in HTTP response headers.",
+        "operationId": "get_patch_epoch_image_api_v1_patches__patch_id__image__epoch__get",
+        "parameters": [
+          {
+            "name": "patch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Patch ID (e.g., `wise0855`, `barnard`)",
+              "title": "Patch Id"
+            },
+            "description": "Patch ID (e.g., `wise0855`, `barnard`)"
+          },
+          {
+            "name": "epoch",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 2,
+              "minimum": 1,
+              "description": "Epoch number (`1` = earlier baseline date, `2` = 6 months later)",
+              "title": "Epoch"
+            },
+            "description": "Epoch number (`1` = earlier baseline date, `2` = 6 months later)"
+          },
+          {
+            "name": "vision_mode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "gamified",
+                "raw"
+              ],
+              "type": "string",
+              "description": "Dual-Vision toggle: `gamified` (vibrant high-contrast false-color) or `raw` (authentic monochrome infrared)",
+              "default": "gamified",
+              "title": "Vision Mode"
+            },
+            "description": "Dual-Vision toggle: `gamified` (vibrant high-contrast false-color) or `raw` (authentic monochrome infrared)"
+          },
+          {
+            "name": "cmap",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "inferno",
+                    "plasma",
+                    "viridis",
+                    "magma",
+                    "cool",
+                    "grayscale"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional explicit colormap override",
+              "title": "Cmap"
+            },
+            "description": "Optional explicit colormap override"
+          },
+          {
+            "name": "true_pixels",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "If `true`, disables interpolation (`nearest`) so users see crisp raw telescope pixels",
+              "default": false,
+              "title": "True Pixels"
+            },
+            "description": "If `true`, disables interpolation (`nearest`) so users see crisp raw telescope pixels"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Rendered 2D sky patch PNG with X-Observation-Date and X-Data-Tag headers.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              },
+              "image/png": {}
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/patches/{patch_id}/difference": {
+      "get": {
+        "tags": [
+          "FITS Image Rendering & Dual-Vision"
+        ],
+        "summary": "Render Epoch 2 minus Epoch 1 Dipole Subtraction Map as PNG",
+        "description": "Computes `Epoch 2 - Epoch 1` directly from the FITS arrays. Fixed background stars cancel out to neutral gray,\nwhile moving objects leave a clear dipole signature.",
+        "operationId": "get_patch_difference_image_api_v1_patches__patch_id__difference_get",
+        "parameters": [
+          {
+            "name": "patch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Patch ID (e.g., `wise0855`, `barnard`)",
+              "title": "Patch Id"
+            },
+            "description": "Patch ID (e.g., `wise0855`, `barnard`)"
+          },
+          {
+            "name": "vision_mode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "gamified",
+                "raw"
+              ],
+              "type": "string",
+              "description": "`gamified` renders a diverging blue-red dipole map; `raw` renders linear diverging grayscale",
+              "default": "gamified",
+              "title": "Vision Mode"
+            },
+            "description": "`gamified` renders a diverging blue-red dipole map; `raw` renders linear diverging grayscale"
+          },
+          {
+            "name": "true_pixels",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "If `true`, renders crisp detector pixels (`nearest`)",
+              "default": false,
+              "title": "True Pixels"
+            },
+            "description": "If `true`, renders crisp detector pixels (`nearest`)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Rendered difference image showing moving dipoles (dark at Epoch 1, bright at Epoch 2).",
+            "content": {
+              "application/json": {
+                "schema": {}
+              },
+              "image/png": {}
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/patches/{patch_id}/verify": {
+      "post": {
+        "tags": [
+          "Stage 4: Training (Quick Spotter)"
+        ],
+        "summary": "Verify user click in Stage 4 (Training) and unlock the Discovery Reveal Card",
+        "description": "Validates whether the learner clicked on the moving/variable object in a prepared training patch.\n- Supports both raw `0..128` pixel coordinates and `0.0..1.0` normalized coordinates (`normalized=true`).\n- Detects if the learner accidentally clicked a single-frame cosmic ray glitch and gives helpful feedback.\n- Always returns the true coordinates and `reveal_card` so the UI can highlight the answer.",
+        "operationId": "verify_training_spot_api_v1_patches__patch_id__verify_post",
+        "parameters": [
+          {
+            "name": "patch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Patch ID being played in Stage 4: Training",
+              "title": "Patch Id"
+            },
+            "description": "Patch ID being played in Stage 4: Training"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpotCheckRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpotCheckResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/candidates": {
+      "get": {
+        "tags": [
+          "Stage 5: Explore (Citizen Science Viewer)"
+        ],
+        "summary": "List candidates logged during the current session",
+        "description": "Returns all Stage 5 candidates flagged by users during the session.",
+        "operationId": "list_submitted_candidates_api_v1_candidates_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CandidateSubmissionResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Submitted Candidates Api V1 Candidates Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Stage 5: Explore (Citizen Science Viewer)"
+        ],
+        "summary": "Log a potential moving candidate noticed in Stage 5: Explore",
+        "description": "Logs a citizen-science observation in **Stage 5: Explore**.\nPer project rules, anything noticed in Stage 5 is recorded honestly as a **candidate** (never claimed as a confirmed new planet)\nand automatically checked against single-frame sensor glitches.",
+        "operationId": "submit_explore_candidate_api_v1_candidates_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CandidateSubmissionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CandidateSubmissionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AcademyStageSchema": {
+        "properties": {
+          "stage_number": {
+            "type": "integer",
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Stage Number",
+            "description": "Stage number (1 to 5)"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Stage name (e.g., 'Baby Steps', 'Training', 'Explore')"
+          },
+          "subtitle": {
+            "type": "string",
+            "title": "Subtitle",
+            "description": "One-line description of what the learner does"
+          },
+          "stage_type": {
+            "type": "string",
+            "enum": [
+              "lesson",
+              "training",
+              "explore"
+            ],
+            "title": "Stage Type",
+            "description": "UI mode for this stage"
+          },
+          "cards": {
+            "items": {
+              "$ref": "#/components/schemas/LessonCardSchema"
+            },
+            "type": "array",
+            "title": "Cards",
+            "description": "Lesson cards (Stages 1-3)"
+          },
+          "question": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StageQuestionSchema"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Unlock quiz question (Stages 1-3)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "stage_number",
+          "name",
+          "subtitle",
+          "stage_type"
+        ],
+        "title": "AcademyStageSchema"
+      },
+      "AnomalyCoordinates": {
+        "properties": {
+          "epoch1_x": {
+            "type": "number",
+            "title": "Epoch1 X",
+            "description": "X pixel coordinate (0-128) in Epoch 1"
+          },
+          "epoch1_y": {
+            "type": "number",
+            "title": "Epoch1 Y",
+            "description": "Y pixel coordinate (0-128) in Epoch 1"
+          },
+          "epoch2_x": {
+            "type": "number",
+            "title": "Epoch2 X",
+            "description": "X pixel coordinate (0-128) in Epoch 2"
+          },
+          "epoch2_y": {
+            "type": "number",
+            "title": "Epoch2 Y",
+            "description": "Y pixel coordinate (0-128) in Epoch 2"
+          },
+          "tolerance_radius_px": {
+            "type": "number",
+            "title": "Tolerance Radius Px",
+            "description": "Click tolerance radius in pixels (on 128x128 grid)",
+            "default": 12.0
+          }
+        },
+        "type": "object",
+        "required": [
+          "epoch1_x",
+          "epoch1_y",
+          "epoch2_x",
+          "epoch2_y"
+        ],
+        "title": "AnomalyCoordinates"
+      },
+      "CandidateSubmissionRequest": {
+        "properties": {
+          "patch_id": {
+            "type": "string",
+            "title": "Patch Id",
+            "description": "ID of the patch being inspected in Stage 5: Explore"
+          },
+          "click_x": {
+            "type": "number",
+            "title": "Click X",
+            "description": "Candidate X coordinate (0-128 or 0.0-1.0 if normalized=True)"
+          },
+          "click_y": {
+            "type": "number",
+            "title": "Click Y",
+            "description": "Candidate Y coordinate (0-128 or 0.0-1.0 if normalized=True)"
+          },
+          "normalized": {
+            "type": "boolean",
+            "title": "Normalized",
+            "description": "True if click_x/click_y are normalized (0.0 to 1.0)",
+            "default": false
+          },
+          "classification": {
+            "type": "string",
+            "enum": [
+              "slow_mover",
+              "fast_mover",
+              "variable_brightness",
+              "dipole_shift",
+              "unsure"
+            ],
+            "title": "Classification",
+            "description": "User's hypothesis for what changed between the two dates",
+            "default": "dipole_shift"
+          },
+          "user_notes": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Notes",
+            "description": "Optional observation note from the citizen scientist",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "patch_id",
+          "click_x",
+          "click_y"
+        ],
+        "title": "CandidateSubmissionRequest"
+      },
+      "CandidateSubmissionResponse": {
+        "properties": {
+          "candidate_id": {
+            "type": "string",
+            "title": "Candidate Id",
+            "description": "Unique tracking ID for the logged candidate"
+          },
+          "patch_id": {
+            "type": "string",
+            "title": "Patch Id"
+          },
+          "stage_label": {
+            "type": "string",
+            "title": "Stage Label",
+            "default": "Stage 5: Explore"
+          },
+          "estimated_ra_deg": {
+            "type": "number",
+            "title": "Estimated Ra Deg",
+            "description": "Calculated Right Ascension (deg) of the clicked pixel"
+          },
+          "estimated_dec_deg": {
+            "type": "number",
+            "title": "Estimated Dec Deg",
+            "description": "Calculated Declination (deg) of the clicked pixel"
+          },
+          "grid_x": {
+            "type": "number",
+            "title": "Grid X"
+          },
+          "grid_y": {
+            "type": "number",
+            "title": "Grid Y"
+          },
+          "epoch1_date": {
+            "type": "string",
+            "title": "Epoch1 Date"
+          },
+          "epoch2_date": {
+            "type": "string",
+            "title": "Epoch2 Date"
+          },
+          "data_tag": {
+            "type": "string",
+            "enum": [
+              "Real",
+              "Simulated"
+            ],
+            "title": "Data Tag"
+          },
+          "likely_single_frame_glitch": {
+            "type": "boolean",
+            "title": "Likely Single Frame Glitch",
+            "description": "Automated software check: True if flux spike appears in only 1 epoch with sharp 1-px profile"
+          },
+          "triage_message": {
+            "type": "string",
+            "title": "Triage Message",
+            "description": "Honest scientific feedback reminding the user that Stage 5 logs are candidates, not confirmed planets"
+          },
+          "xp_awarded": {
+            "type": "integer",
+            "title": "Xp Awarded",
+            "description": "XP awarded for logging a carefully inspected candidate",
+            "default": 30
+          }
+        },
+        "type": "object",
+        "required": [
+          "candidate_id",
+          "patch_id",
+          "estimated_ra_deg",
+          "estimated_dec_deg",
+          "grid_x",
+          "grid_y",
+          "epoch1_date",
+          "epoch2_date",
+          "data_tag",
+          "likely_single_frame_glitch",
+          "triage_message"
+        ],
+        "title": "CandidateSubmissionResponse"
+      },
+      "DiscoveryRevealCard": {
+        "properties": {
+          "object_name": {
+            "type": "string",
+            "title": "Object Name",
+            "description": "Official astronomical name of the target"
+          },
+          "discovery_year": {
+            "type": "integer",
+            "title": "Discovery Year",
+            "description": "Year the object or behavior was discovered"
+          },
+          "discoverer": {
+            "type": "string",
+            "title": "Discoverer",
+            "description": "Astronomer or mission team credited"
+          },
+          "anomaly_type": {
+            "type": "string",
+            "title": "Anomaly Type",
+            "description": "Category (e.g., 'High Proper Motion Brown Dwarf', 'Variable Star')"
+          },
+          "story": {
+            "type": "string",
+            "title": "Story",
+            "description": "2-3 sentence backstory unlocked upon spotting the anomaly"
+          },
+          "blink_explanation": {
+            "type": "string",
+            "title": "Blink Explanation",
+            "description": "Plain-English explanation of what moved or changed between Epoch 1 and Epoch 2"
+          }
+        },
+        "type": "object",
+        "required": [
+          "object_name",
+          "discovery_year",
+          "discoverer",
+          "anomaly_type",
+          "story",
+          "blink_explanation"
+        ],
+        "title": "DiscoveryRevealCard"
+      },
+      "EpochMetadata": {
+        "properties": {
+          "epoch_number": {
+            "type": "integer",
+            "enum": [
+              1,
+              2
+            ],
+            "title": "Epoch Number",
+            "description": "Epoch index (1 = earlier baseline, 2 = 6 months later)"
+          },
+          "date_obs": {
+            "type": "string",
+            "title": "Date Obs",
+            "description": "Observation UTC date (YYYY-MM-DD) - MUST be displayed on every image"
+          },
+          "data_tag": {
+            "type": "string",
+            "enum": [
+              "Real",
+              "Simulated"
+            ],
+            "title": "Data Tag",
+            "description": "Mandatory authenticity badge ('Real' or 'Simulated')"
+          },
+          "gamified_image_url": {
+            "type": "string",
+            "title": "Gamified Image Url",
+            "description": "URL for Dual-Vision Gamified (false-color enhanced) PNG"
+          },
+          "raw_image_url": {
+            "type": "string",
+            "title": "Raw Image Url",
+            "description": "URL for Dual-Vision Authentic Raw (monochrome grayscale) PNG"
+          }
+        },
+        "type": "object",
+        "required": [
+          "epoch_number",
+          "date_obs",
+          "data_tag",
+          "gamified_image_url",
+          "raw_image_url"
+        ],
+        "title": "EpochMetadata"
+      },
+      "FitsTelemetry": {
+        "properties": {
+          "width_px": {
+            "type": "integer",
+            "title": "Width Px",
+            "description": "FITS cutout width in detector pixels",
+            "default": 128
+          },
+          "height_px": {
+            "type": "integer",
+            "title": "Height Px",
+            "description": "FITS cutout height in detector pixels",
+            "default": 128
+          },
+          "bunit": {
+            "type": "string",
+            "title": "Bunit",
+            "description": "Physical surface brightness unit from FITS header",
+            "default": "MJy/sr"
+          },
+          "epoch1_min_flux": {
+            "type": "number",
+            "title": "Epoch1 Min Flux",
+            "description": "Minimum pixel value in Epoch 1"
+          },
+          "epoch1_max_flux": {
+            "type": "number",
+            "title": "Epoch1 Max Flux",
+            "description": "Maximum pixel value in Epoch 1"
+          },
+          "epoch1_mean_flux": {
+            "type": "number",
+            "title": "Epoch1 Mean Flux",
+            "description": "Mean background flux in Epoch 1"
+          },
+          "epoch2_min_flux": {
+            "type": "number",
+            "title": "Epoch2 Min Flux",
+            "description": "Minimum pixel value in Epoch 2"
+          },
+          "epoch2_max_flux": {
+            "type": "number",
+            "title": "Epoch2 Max Flux",
+            "description": "Maximum pixel value in Epoch 2"
+          },
+          "epoch2_mean_flux": {
+            "type": "number",
+            "title": "Epoch2 Mean Flux",
+            "description": "Mean background flux in Epoch 2"
+          }
+        },
+        "type": "object",
+        "required": [
+          "epoch1_min_flux",
+          "epoch1_max_flux",
+          "epoch1_mean_flux",
+          "epoch2_min_flux",
+          "epoch2_max_flux",
+          "epoch2_mean_flux"
+        ],
+        "title": "FitsTelemetry"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "LessonCardSchema": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "Card heading (e.g., 'Infrared light', 'Pluto, 1930')"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text",
+            "description": "2 to 3 sentences explaining the concept in plain language"
+          },
+          "icon_name": {
+            "type": "string",
+            "title": "Icon Name",
+            "description": "Suggested icon identifier for frontend UI"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "text",
+          "icon_name"
+        ],
+        "title": "LessonCardSchema"
+      },
+      "PatchDetail": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique patch identifier (e.g., 'wise0855', 'barnard', 'nep_deep')"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "Display title (explicitly marked as Training/Known Answer for Stage 4)"
+          },
+          "stage": {
+            "type": "integer",
+            "enum": [
+              4,
+              5
+            ],
+            "title": "Stage",
+            "description": "4 = Stage 4: Training (Quick Spotter), 5 = Stage 5: Explore (Viewer)"
+          },
+          "stage_label": {
+            "type": "string",
+            "title": "Stage Label",
+            "description": "'Stage 4: Training' or 'Stage 5: Explore'"
+          },
+          "is_training": {
+            "type": "boolean",
+            "title": "Is Training",
+            "description": "True if prepared training example with known answer (Stage 4)"
+          },
+          "data_tag": {
+            "type": "string",
+            "enum": [
+              "Real",
+              "Simulated"
+            ],
+            "title": "Data Tag",
+            "description": "Mandatory 'Real' or 'Simulated' badge"
+          },
+          "ra_deg": {
+            "type": "number",
+            "title": "Ra Deg",
+            "description": "Right Ascension in decimal degrees (J2000)"
+          },
+          "dec_deg": {
+            "type": "number",
+            "title": "Dec Deg",
+            "description": "Declination in decimal degrees (J2000)"
+          },
+          "ra_hms": {
+            "type": "string",
+            "title": "Ra Hms",
+            "description": "Right Ascension in sexagesimal format (HHh MMm SSs)"
+          },
+          "dec_dms": {
+            "type": "string",
+            "title": "Dec Dms",
+            "description": "Declination in sexagesimal format (+DD\u00b0 MM' SS\")"
+          },
+          "aitoff_x": {
+            "type": "number",
+            "title": "Aitoff X",
+            "description": "Normalized Aitoff projection X coordinate (-1.0 to 1.0) for all-sky map"
+          },
+          "aitoff_y": {
+            "type": "number",
+            "title": "Aitoff Y",
+            "description": "Normalized Aitoff projection Y coordinate (-1.0 to 1.0) for all-sky map"
+          },
+          "instrument": {
+            "type": "string",
+            "title": "Instrument",
+            "description": "Telescope/mission source (e.g., 'SPHEREx', 'SPHEREx / WISE-Archive')"
+          },
+          "default_band": {
+            "type": "string",
+            "title": "Default Band",
+            "description": "Default near-infrared spectral band"
+          },
+          "available_bands": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Available Bands",
+            "description": "Selectable infrared bands for spectral exploration"
+          },
+          "briefing": {
+            "type": "string",
+            "title": "Briefing",
+            "description": "Short 2-sentence mission briefing for the user"
+          },
+          "epochs": {
+            "items": {
+              "$ref": "#/components/schemas/EpochMetadata"
+            },
+            "type": "array",
+            "title": "Epochs",
+            "description": "Metadata and image URLs for Epoch 1 and Epoch 2"
+          },
+          "difference_gamified_url": {
+            "type": "string",
+            "title": "Difference Gamified Url",
+            "description": "URL for Epoch 2 - Epoch 1 difference map (Gamified color)"
+          },
+          "difference_raw_url": {
+            "type": "string",
+            "title": "Difference Raw Url",
+            "description": "URL for Epoch 2 - Epoch 1 difference map (Raw grayscale)"
+          },
+          "telemetry": {
+            "$ref": "#/components/schemas/FitsTelemetry",
+            "description": "Real-time statistics extracted from the FITS primary HDU"
+          },
+          "has_planted_glitch": {
+            "type": "boolean",
+            "title": "Has Planted Glitch",
+            "description": "Whether this patch contains a single-frame sensor glitch to test the user"
+          },
+          "known_anomaly": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AnomalyCoordinates"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Coordinates of the known moving/varying object (populated for Stage 4 when include_answer=true)"
+          },
+          "reveal_card": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DiscoveryRevealCard"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Historical story and scientific explanation (populated for Stage 4 when include_answer=true)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "stage",
+          "stage_label",
+          "is_training",
+          "data_tag",
+          "ra_deg",
+          "dec_deg",
+          "ra_hms",
+          "dec_dms",
+          "aitoff_x",
+          "aitoff_y",
+          "instrument",
+          "default_band",
+          "available_bands",
+          "briefing",
+          "epochs",
+          "difference_gamified_url",
+          "difference_raw_url",
+          "telemetry",
+          "has_planted_glitch"
+        ],
+        "title": "PatchDetail"
+      },
+      "PatchSummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique patch identifier (e.g., 'wise0855', 'barnard', 'nep_deep')"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "Display title (explicitly marked as Training/Known Answer for Stage 4)"
+          },
+          "stage": {
+            "type": "integer",
+            "enum": [
+              4,
+              5
+            ],
+            "title": "Stage",
+            "description": "4 = Stage 4: Training (Quick Spotter), 5 = Stage 5: Explore (Viewer)"
+          },
+          "stage_label": {
+            "type": "string",
+            "title": "Stage Label",
+            "description": "'Stage 4: Training' or 'Stage 5: Explore'"
+          },
+          "is_training": {
+            "type": "boolean",
+            "title": "Is Training",
+            "description": "True if prepared training example with known answer (Stage 4)"
+          },
+          "data_tag": {
+            "type": "string",
+            "enum": [
+              "Real",
+              "Simulated"
+            ],
+            "title": "Data Tag",
+            "description": "Mandatory 'Real' or 'Simulated' badge"
+          },
+          "ra_deg": {
+            "type": "number",
+            "title": "Ra Deg",
+            "description": "Right Ascension in decimal degrees (J2000)"
+          },
+          "dec_deg": {
+            "type": "number",
+            "title": "Dec Deg",
+            "description": "Declination in decimal degrees (J2000)"
+          },
+          "ra_hms": {
+            "type": "string",
+            "title": "Ra Hms",
+            "description": "Right Ascension in sexagesimal format (HHh MMm SSs)"
+          },
+          "dec_dms": {
+            "type": "string",
+            "title": "Dec Dms",
+            "description": "Declination in sexagesimal format (+DD\u00b0 MM' SS\")"
+          },
+          "aitoff_x": {
+            "type": "number",
+            "title": "Aitoff X",
+            "description": "Normalized Aitoff projection X coordinate (-1.0 to 1.0) for all-sky map"
+          },
+          "aitoff_y": {
+            "type": "number",
+            "title": "Aitoff Y",
+            "description": "Normalized Aitoff projection Y coordinate (-1.0 to 1.0) for all-sky map"
+          },
+          "instrument": {
+            "type": "string",
+            "title": "Instrument",
+            "description": "Telescope/mission source (e.g., 'SPHEREx', 'SPHEREx / WISE-Archive')"
+          },
+          "default_band": {
+            "type": "string",
+            "title": "Default Band",
+            "description": "Default near-infrared spectral band"
+          },
+          "available_bands": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Available Bands",
+            "description": "Selectable infrared bands for spectral exploration"
+          },
+          "briefing": {
+            "type": "string",
+            "title": "Briefing",
+            "description": "Short 2-sentence mission briefing for the user"
+          },
+          "epochs": {
+            "items": {
+              "$ref": "#/components/schemas/EpochMetadata"
+            },
+            "type": "array",
+            "title": "Epochs",
+            "description": "Metadata and image URLs for Epoch 1 and Epoch 2"
+          },
+          "difference_gamified_url": {
+            "type": "string",
+            "title": "Difference Gamified Url",
+            "description": "URL for Epoch 2 - Epoch 1 difference map (Gamified color)"
+          },
+          "difference_raw_url": {
+            "type": "string",
+            "title": "Difference Raw Url",
+            "description": "URL for Epoch 2 - Epoch 1 difference map (Raw grayscale)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "stage",
+          "stage_label",
+          "is_training",
+          "data_tag",
+          "ra_deg",
+          "dec_deg",
+          "ra_hms",
+          "dec_dms",
+          "aitoff_x",
+          "aitoff_y",
+          "instrument",
+          "default_band",
+          "available_bands",
+          "briefing",
+          "epochs",
+          "difference_gamified_url",
+          "difference_raw_url"
+        ],
+        "title": "PatchSummary"
+      },
+      "SpotCheckRequest": {
+        "properties": {
+          "click_x": {
+            "type": "number",
+            "title": "Click X",
+            "description": "User click X coordinate (0-128 pixel grid, or 0.0-1.0 if normalized=True)"
+          },
+          "click_y": {
+            "type": "number",
+            "title": "Click Y",
+            "description": "User click Y coordinate (0-128 pixel grid, or 0.0-1.0 if normalized=True)"
+          },
+          "normalized": {
+            "type": "boolean",
+            "title": "Normalized",
+            "description": "Set to True if frontend sends normalized (0.0 to 1.0) coordinates relative to image width/height",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "click_x",
+          "click_y"
+        ],
+        "title": "SpotCheckRequest"
+      },
+      "SpotCheckResponse": {
+        "properties": {
+          "patch_id": {
+            "type": "string",
+            "title": "Patch Id"
+          },
+          "correct": {
+            "type": "boolean",
+            "title": "Correct",
+            "description": "True if the user clicked within the tolerance radius of the moving anomaly"
+          },
+          "hit_glitch": {
+            "type": "boolean",
+            "title": "Hit Glitch",
+            "description": "True if the user was fooled by a single-frame cosmic ray / camera glitch"
+          },
+          "click_grid_x": {
+            "type": "number",
+            "title": "Click Grid X",
+            "description": "Click X converted to the 128x128 FITS pixel grid"
+          },
+          "click_grid_y": {
+            "type": "number",
+            "title": "Click Grid Y",
+            "description": "Click Y converted to the 128x128 FITS pixel grid"
+          },
+          "distance_to_target_px": {
+            "type": "number",
+            "title": "Distance To Target Px",
+            "description": "Euclidean distance in pixels from click to the true target"
+          },
+          "xp_awarded": {
+            "type": "integer",
+            "title": "Xp Awarded",
+            "description": "XP earned (+50 XP on correct spot, 0 on miss)"
+          },
+          "feedback": {
+            "type": "string",
+            "title": "Feedback",
+            "description": "Immediate encouraging feedback or glitch warning"
+          },
+          "target_coords": {
+            "$ref": "#/components/schemas/AnomalyCoordinates",
+            "description": "True coordinates so frontend can draw the reveal ring"
+          },
+          "reveal_card": {
+            "$ref": "#/components/schemas/DiscoveryRevealCard",
+            "description": "Discovery Unlocked card details"
+          }
+        },
+        "type": "object",
+        "required": [
+          "patch_id",
+          "correct",
+          "hit_glitch",
+          "click_grid_x",
+          "click_grid_y",
+          "distance_to_target_px",
+          "xp_awarded",
+          "feedback",
+          "target_coords",
+          "reveal_card"
+        ],
+        "title": "SpotCheckResponse"
+      },
+      "StageQuestionSchema": {
+        "properties": {
+          "question": {
+            "type": "string",
+            "title": "Question",
+            "description": "Multiple-choice checkpoint question for the stage"
+          },
+          "options": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 3,
+            "minItems": 3,
+            "title": "Options",
+            "description": "Exactly 3 answer options"
+          },
+          "correct_index": {
+            "type": "integer",
+            "maximum": 2.0,
+            "minimum": 0.0,
+            "title": "Correct Index",
+            "description": "0-based index of the correct option"
+          },
+          "feedback": {
+            "type": "string",
+            "title": "Feedback",
+            "description": "Explanation shown after answering (or when retrying)"
+          },
+          "xp_reward": {
+            "type": "integer",
+            "title": "Xp Reward",
+            "description": "XP awarded for a correct answer (+20 XP per spec)",
+            "default": 20
+          }
+        },
+        "type": "object",
+        "required": [
+          "question",
+          "options",
+          "correct_index",
+          "feedback"
+        ],
+        "title": "StageQuestionSchema"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
