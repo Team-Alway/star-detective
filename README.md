@@ -1,36 +1,39 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Star Detective
 
-## Getting Started
+Spot what moved between two infrared images of the same sky (NASA SPHEREx).
 
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```
+frontend/   Next.js app (Quick Spotter, Viewer, round summary, About)
+backend/    FastAPI service that renders NASA FITS patches and checks answers
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Run it
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**Backend** (http://localhost:8000, docs at `/docs`):
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+cd backend
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+.venv/bin/uvicorn main:app --reload --port 8000
+```
 
-## Learn More
+The first start is slow while matplotlib builds its font cache.
 
-To learn more about Next.js, take a look at the following resources:
+**Frontend** (http://localhost:3000):
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+cd frontend
+echo 'NEXT_PUBLIC_API_URL=http://localhost:8000' > .env.local   # optional, this is the default
+npm install
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## How they connect
 
-## Deploy on Vercel
+| Screen | Backend calls |
+|---|---|
+| Quick Spotter (`/play`) | `GET /api/v1/patches?stage=4`, then `GET /api/v1/patches/{id}` for each patch (answer + reveal card). Images come from `/api/v1/patches/{id}/image/{1,2}`. |
+| Viewer (`/viewer`) | `GET /api/v1/patches` (all 6), same image endpoints. |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+If the backend is unreachable, both screens show the "We could not load this image" state with
+**Play a saved level**, which switches to the bundled single-image preview.

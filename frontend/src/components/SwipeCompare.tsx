@@ -2,9 +2,10 @@
 
 import { useRef, useState } from "react";
 import { SkyPhoto } from "@/components/SkyImage";
+import type { ImageSet } from "@/lib/round";
 
 /** Drag (or use the arrow keys) to reveal image B over image A. */
-export default function SwipeCompare() {
+export default function SwipeCompare({ images }: { images: ImageSet }) {
   const [position, setPosition] = useState(50);
   const frame = useRef<HTMLDivElement>(null);
 
@@ -27,10 +28,10 @@ export default function SwipeCompare() {
       }}
     >
       <div className="swipe-b" style={{ clipPath: `inset(0 0 0 ${position}%)` }}>
-        <SkyPhoto />
+        <SkyPhoto src={images.srcB} mode={images.mode} />
       </div>
       <span className="swipe-label swipe-label-a">Image A</span>
-      <span className="swipe-label swipe-label-b">Demo B</span>
+      <span className="swipe-label swipe-label-b">{images.mode === "saved" ? "Demo B" : "Image B"}</span>
       <div className="swipe-divider" style={{ left: `${position}%` }} />
       <div
         className="swipe-grip"

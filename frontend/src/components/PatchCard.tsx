@@ -5,11 +5,15 @@ export default function PatchCard({
   lines,
   selected,
   onSelect,
+  src,
+  mode,
 }: {
   title: string;
   lines: string[];
   selected: boolean;
   onSelect: () => void;
+  src?: string;
+  mode?: "api" | "saved";
 }) {
   return (
     <button
@@ -19,7 +23,7 @@ export default function PatchCard({
       onClick={onSelect}
     >
       <span className="patch-thumb">
-        <SkyPhoto />
+        <SkyPhoto src={src} mode={mode} />
       </span>
       <span className="patch-card-text">
         <span className="patch-card-title">{title}</span>

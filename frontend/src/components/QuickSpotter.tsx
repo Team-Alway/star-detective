@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import useSWR from "swr";
 import AnswerButtons from "@/components/AnswerButtons";
+import ArchiveState from "@/components/ArchiveState";
 import BlinkControls, { useBlink } from "@/components/BlinkControls";
 import HelpDialog from "@/components/HelpDialog";
 import RevealCard from "@/components/RevealCard";
@@ -12,13 +14,8 @@ import SiteNav, { PlayMeta } from "@/components/SiteNav";
 import SkyImage from "@/components/SkyImage";
 import TypeTag from "@/components/TypeTag";
 import XpCounter from "@/components/XpCounter";
-import {
-  DEMO_ROUND,
-  buildEntry,
-  describeOutcome,
-  type Answer,
-  type RoundEntry,
-} from "@/lib/demo";
+import { buildEntry, type Answer, type RoundEntry } from "@/lib/demo";
+import { SAVED_ROUND, describeOutcome, loadRound, type RoundPatch } from "@/lib/round";
 import { saveRound } from "@/lib/xp";
 
 const HELP_KEY = "star-detective-help-seen";
@@ -42,7 +39,28 @@ function useOnline() {
 
 type Phase = "ask" | "recorded" | "reveal";
 
+/** Loads the Training round from the API, falling back to the bundled saved level. */
 export default function QuickSpotter() {
+  const [useSaved, setUseSaved] = useState(false);
+  const { data, error, mutate } = useSWR(useSaved ? null : "round:stage-4", loadRound, {
+    revalidateOnFocus: false,
+    shouldRetryOnError: false,
+  });
+
+  if (useSaved) return <Round patches={SAVED_ROUND} saved />;
+  if (data) return <Round patches={data} />;
+  return (
+    <ArchiveState
+      hidePlayLink
+      active="play"
+      failed={Boolean(error)}
+      onRetry={() => mutate()}
+      onSaved={() => setUseSaved(true)}
+    />
+  );
+}
+
+function Round({ patches, saved = false }: { patches: RoundPatch[]; saved?: boolean }) {
   const router = useRouter();
   const blink = useBlink();
   const online = useOnline();
@@ -53,11 +71,11 @@ export default function QuickSpotter() {
   const [helpOpen, setHelpOpen] = useState(false);
   const timer = useRef<number | undefined>(undefined);
 
-  const patch = DEMO_ROUND[index];
+  const patch = patches[index];
   const entry = phase === "reveal" ? entries[index] : undefined;
-  const outcome = entry ? describeOutcome(patch.kind, entry.answer) : undefined;
+  const outcome = entry ? describeOutcome(patch, entry.answer) : undefined;
   const totalXp = entries.reduce((sum, item) => sum + item.delta, 0);
-  const isLast = index === DEMO_ROUND.length - 1;
+  const isLast = index === patches.length - 1;
   const xpTone = !entry ? "default" : entry.delta > 0 ? "gain" : entry.delta < 0 ? "loss" : "default";
 
   // First visit: open the help once.
@@ -101,18 +119,19 @@ export default function QuickSpotter() {
   }
 
   const revealing = phase === "reveal" && outcome;
+  const preview = patch.images.mode === "saved";
 
   return (
     <div className="sd-page">
       <SiteNav hidePlayLink active="viewer">
         <PlayMeta
           patch={index + 1}
-          total={DEMO_ROUND.length}
+          total={patches.length}
           xpNode={<XpCounter value={totalXp} tone={xpTone} />}
         />
       </SiteNav>
 
-      {!online && (
+      {(saved || !online) && (
         <div className="offline-bar" role="status">
           <strong>Showing saved levels while the archive is unreachable.</strong>{" "}
           Saved patches keep their original data labels.
@@ -123,11 +142,13 @@ export default function QuickSpotter() {
         <div className="stage-left">
           <div className="sky-wrap">
             <SkyImage
+              key={patch.id}
+              images={patch.images}
               side={blink.side}
               patchKind={patch.kind}
               showTarget={!revealing}
             >
-              {revealing && <RevealMarkers marker={outcome.marker} markerLabel={outcome.markerLabel} />}
+              {revealing && <RevealMarkers patch={patch} outcome={outcome} />}
             </SkyImage>
           </div>
 
@@ -139,7 +160,9 @@ export default function QuickSpotter() {
           {!revealing && (
             <div className="answers-block">
               <p className="hint hint-mobile">
-                Design preview · A / B use one reference image. Blink starts only when you press it.
+                {preview
+                  ? "Design preview · A / B use one reference image. Blink starts only when you press it."
+                  : "Real observation dates on every image. Blink starts only when you press it."}
               </p>
               <AnswerButtons
                 onAnswer={answer}
@@ -155,8 +178,9 @@ export default function QuickSpotter() {
           )}
 
           <p className="footnote footnote-desktop">
-            DESIGN PREVIEW · One SPHEREx reference image. A / B and target motion are simulated, not
-            separate observations.
+            {preview
+              ? "DESIGN PREVIEW · One SPHEREx reference image. A / B and target motion are simulated, not separate observations."
+              : `${patch.images.tag?.toUpperCase()} DATA · Two observation dates of the same patch, rendered from NASA FITS files. Dates and data labels are shown on every image.`}
           </p>
         </div>
 
@@ -190,8 +214,10 @@ export default function QuickSpotter() {
             <div className="notice">
               <p className="notice-label">YOU CONTROL THE COMPARISON</p>
               <p className="notice-body">
-                Blink never starts on its own. Manual stepping is always available. Demo images use the
-                same NASA reference with a test target added.
+                Blink never starts on its own. Manual stepping is always available.{" "}
+                {preview
+                  ? "Demo images use the same NASA reference with a test target added."
+                  : "These are real observations from two dates, not simulated images."}
               </p>
             </div>
           </div>
@@ -203,11 +229,14 @@ export default function QuickSpotter() {
               <p className={`reveal-xp reveal-xp-${outcome.tone}`}>{outcome.xpLabel}</p>
             </div>
             <p className="reveal-choice">{outcome.chose}</p>
-            <TypeTag
-              label={outcome.badge}
-              tone={outcome.badge === "No change" ? "muted" : "simulated"}
+            <TypeTag label={outcome.badge} tone={outcome.badgeTone} />
+            <RevealCard
+              name={outcome.cardName}
+              description={outcome.cardDescription}
+              dates={outcome.cardDates}
+              note={outcome.cardNote}
+              link={outcome.cardLink}
             />
-            <RevealCard name={outcome.cardName} description={outcome.cardDescription} />
             <p className="how-label">HOW YOU CAN TELL</p>
             <p className="how-text">{outcome.how}</p>
             <div className="reveal-actions">
@@ -219,7 +248,9 @@ export default function QuickSpotter() {
               </Link>
             </div>
             <p className="footnote reveal-note">
-              Example outcome. Replace with a verified patch and catalogue match before live play.
+              {preview
+                ? "Example outcome. Replace with a verified patch and catalogue match before live play."
+                : `${patch.reveal?.instrument} \u00b7 ${patch.reveal?.band}. Anything you notice in the Viewer is a candidate, not a discovery.`}
             </p>
           </div>
         )}

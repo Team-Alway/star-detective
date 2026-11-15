@@ -1,48 +1,27 @@
-import type { AnswerResult, Patch, PatchSummary } from "@/lib/types";
+import type { PatchDetail, PatchSummary } from "@/lib/types";
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+/** Backend base URL. Set NEXT_PUBLIC_API_URL in frontend/.env.local; defaults to the local FastAPI server. */
+export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000").replace(/\/$/, "");
 
-function getApiUrl() {
-  if (!apiUrl) {
-    throw new Error("NEXT_PUBLIC_API_URL is not configured");
-  }
-
-  return apiUrl;
-}
-
-export async function fetchPatches(): Promise<PatchSummary[]> {
-  const response = await fetch(`${getApiUrl()}/api/patches`);
-
+async function getJson<T>(path: string): Promise<T> {
+  const response = await fetch(`${API_URL}${path}`);
   if (!response.ok) {
-    throw new Error(`Failed to fetch patches: ${response.status}`);
+    throw new Error(`Request failed (${response.status}): ${path}`);
   }
-
   return response.json();
 }
 
-export async function fetchPatch(id: string): Promise<Patch> {
-  const response = await fetch(`${getApiUrl()}/api/patches/${id}`);
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch patch ${id}: ${response.status}`);
-  }
-
-  return response.json();
+/** Stage 4 = Training (Quick Spotter), stage 5 = Explore (Viewer). Omit for every patch. */
+export function fetchPatches(stage?: 4 | 5): Promise<PatchSummary[]> {
+  return getJson(`/api/v1/patches${stage ? `?stage=${stage}` : ""}`);
 }
 
-export async function submitAnswer(
-  id: string,
-  answer: boolean,
-): Promise<AnswerResult> {
-  const response = await fetch(`${getApiUrl()}/api/patches/${id}/answer`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ answer }),
-  });
+/** Full metadata plus the known anomaly and reveal card. */
+export function fetchPatch(id: string): Promise<PatchDetail> {
+  return getJson(`/api/v1/patches/${encodeURIComponent(id)}?include_answer=true`);
+}
 
-  if (!response.ok) {
-    throw new Error(`Failed to submit answer for ${id}: ${response.status}`);
-  }
-
-  return response.json();
+/** Image URLs from the API are relative paths, so they need the backend origin. */
+export function absoluteUrl(path: string) {
+  return /^https?:/.test(path) ? path : `${API_URL}${path}`;
 }

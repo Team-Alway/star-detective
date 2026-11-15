@@ -5,25 +5,39 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import type { Side } from "@/components/BlinkControls";
 import type { PatchKind } from "@/lib/demo";
+import { formatDate, type ImageSet } from "@/lib/round";
 import StatePanel, { LoadingBar } from "@/components/StatePanel";
 
-const SRC = "/figma/spherex-detector.jpeg";
+const SAVED_SRC = "/figma/spherex-detector.jpeg";
 
-/** Image only: the SPHEREx detector crop used in every design frame. */
+/**
+ * One image. "saved" images are the bundled SPHEREx crop (zoomed to match the design frame);
+ * "api" images are the backend's rendered FITS PNGs and fill the frame as-is.
+ */
 export function SkyPhoto({
+  src = SAVED_SRC,
+  mode = "saved",
+  hidden = false,
   onLoad,
   onError,
   imageKey,
 }: {
+  src?: string;
+  mode?: "api" | "saved";
+  hidden?: boolean;
   onLoad?: () => void;
   onError?: () => void;
   imageKey?: number;
 }) {
   return (
-    <div className="sky-photo" aria-hidden>
+    <div
+      className={`sky-photo ${mode === "api" ? "sky-photo-plain" : ""}`}
+      style={hidden ? { visibility: "hidden" } : undefined}
+      aria-hidden
+    >
       <Image
         key={imageKey}
-        src={SRC}
+        src={src}
         alt=""
         fill
         priority
@@ -62,12 +76,14 @@ function GlitchMark() {
 }
 
 export default function SkyImage({
+  images,
   side = "A",
   patchKind = "none",
   showTarget = true,
   children,
   className = "",
 }: {
+  images: ImageSet;
   side?: Side;
   patchKind?: PatchKind;
   showTarget?: boolean;
@@ -76,6 +92,9 @@ export default function SkyImage({
 }) {
   const [status, setStatus] = useState<"loading" | "ready" | "failed">("loading");
   const [attempt, setAttempt] = useState(0);
+  const simulated = images.mode === "saved";
+  const date = side === "A" ? images.dateA : images.dateB;
+  const label = `${side} · ${formatDate(date).toUpperCase()}${images.tag ? ` · ${images.tag.toUpperCase()}` : ""}`;
 
   function retry() {
     setStatus("loading");
@@ -86,16 +105,28 @@ export default function SkyImage({
     <div className={`sky-frame ${className}`}>
       <SkyPhoto
         imageKey={attempt}
+        mode={images.mode}
+        src={images.srcA}
+        hidden={side !== "A"}
         onLoad={() => setStatus((current) => (current === "failed" ? current : "ready"))}
         onError={() => setStatus("failed")}
       />
-      <span className="sky-date">
-        {side} · 27 MAR 2025
-      </span>
-      <span className="sky-scale">Scale not calibrated</span>
+      {images.srcB !== images.srcA && (
+        <SkyPhoto
+          imageKey={attempt}
+          mode={images.mode}
+          src={images.srcB}
+          hidden={side !== "B"}
+          onError={() => setStatus("failed")}
+        />
+      )}
+      <span className="sky-date">{label}</span>
+      {simulated && <span className="sky-scale">Scale not calibrated</span>}
 
-      {status === "ready" && showTarget && patchKind === "mover" && <Target side={side} />}
-      {status === "ready" && showTarget && patchKind === "glitch" && side === "A" && <GlitchMark />}
+      {status === "ready" && simulated && showTarget && patchKind === "mover" && <Target side={side} />}
+      {status === "ready" && simulated && showTarget && patchKind === "glitch" && side === "A" && (
+        <GlitchMark />
+      )}
       {status === "ready" && children}
 
       {status === "loading" && (
@@ -113,14 +144,9 @@ export default function SkyImage({
             title="We could not load this image."
             role="alert"
             actions={
-              <>
-                <button type="button" className="btn btn-primary" onClick={retry}>
-                  Try again
-                </button>
-                <button type="button" className="btn btn-secondary" onClick={retry}>
-                  Play a saved level
-                </button>
-              </>
+              <button type="button" className="btn btn-primary" onClick={retry}>
+                Try again
+              </button>
             }
           >
             Try the request again or continue with saved data.

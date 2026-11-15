@@ -3,12 +3,8 @@
 import Link from "next/link";
 import { useMemo, useSyncExternalStore } from "react";
 import SiteNav from "@/components/SiteNav";
-import {
-  SAMPLE_RESULTS,
-  formatDelta,
-  resultSubtitle,
-  type RoundEntry,
-} from "@/lib/demo";
+import { formatDelta, resultSubtitle, type RoundEntry } from "@/lib/demo";
+import { SAMPLE_RESULTS } from "@/lib/round";
 import { storageKey, type PlayerProgress } from "@/lib/xp";
 
 function subscribe(callback: () => void) {
@@ -41,7 +37,8 @@ export default function RoundSummary() {
   const isSample = live === null;
   const correct = entries.filter((entry) => entry.correct).length;
   const xp = entries.reduce((sum, entry) => sum + entry.delta, 0);
-  const hasGlitchMiss = entries.some((entry) => entry.kind !== "mover" && !entry.correct);
+  const hasGlitchMiss = entries.some((entry) => entry.kind === "glitch" && !entry.correct);
+  const hasStaticMiss = entries.some((entry) => entry.kind === "none" && !entry.correct);
 
   const blurb = isSample
     ? "You spotted the difference in three patches. Take another look at the one that fooled you."
@@ -112,7 +109,9 @@ export default function RoundSummary() {
             <p>
               {hasGlitchMiss || isSample
                 ? "A dot that appears once is not always a mover."
-                : "A mover shifts while nearby stars stay put."}
+                : hasStaticMiss
+                  ? "A star can change brightness without moving at all."
+                  : "A mover shifts while nearby stars stay put."}
             </p>
             <p>Compare again in the viewer — nothing is scored there.</p>
           </div>

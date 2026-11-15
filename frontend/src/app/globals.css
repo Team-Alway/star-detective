@@ -602,3 +602,14 @@ h1 { margin: 0; color: #fbfbff; font: 700 72px/1.03 var(--font-display), sans-se
   .states-title { font-size: 32px; }
   .states-grid { grid-template-columns: 1fr; }
 }
+
+/* API wiring: archive loading / failure page, date chips as buttons, plain (non-cropped) images */
+.archive-state { display: grid; max-width: 432px; margin: 64px auto; padding: 0 16px; }
+.sky-photo-plain > img { transform: none; object-fit: cover; }
+.sky-date { width: auto; max-width: calc(100% - 24px); white-space: nowrap; }
+.chip { background: none; font-family: var(--font-data), monospace; }
+.chip-active { background: var(--sd-raised); }
+.chip-empty { background: var(--sd-surface); }
+.chip:not(:disabled) { cursor: pointer; }
+.chip:disabled { opacity: 1; cursor: default; }
+.details p.details-link { margin-bottom: 0; }
